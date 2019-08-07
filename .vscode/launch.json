@@ -1,0 +1,36 @@
+{
+    // Debug settings: https://github.com/WebFreak001/code-debug
+    "version": "0.2.0",
+    "configurations": [        
+        {
+            "name": "(Windows) Attach",
+            "type": "cppvsdbg",
+            "request": "attach",
+            "processId": "${command:pickProcess}"
+        },
+        {
+            //  Debug the STM32 Blue Pill program.
+            "name": "Debug (STM32 Blue Pill Rust)",
+            "type": "gdb",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+
+            //  This target setting is mandatory but redundant because it's specified in loader.gdb.
+            "target": "target/thumbv7m-none-eabi/release/stm32-blue-pill-rust",
+
+            //  Start arm-none-eabi-gdb with the loader.gdb script.  Connects to OpenOCD to send commands to ST-Link USB dongle.
+            "gdbpath": "arm-none-eabi-gdb",
+            "debugger_args": [
+                "-x",
+                "loader.gdb"
+            ],
+
+            //  For debugger display, don't interpret values returned by gdb.
+            "valuesFormatting": "disabled",
+
+            //  Enable debug output.
+            "printCalls": false,
+            "showDevDebugOutput": false,
+        }
+    ]
+}

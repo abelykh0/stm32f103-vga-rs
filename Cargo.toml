@@ -1,0 +1,24 @@
+[package]
+name = "stm32f103-vga-rs"
+version = "0.1.0"
+authors = ["Andrey Belykh"]
+edition = "2018"
+
+[dependencies]
+panic-halt = "0.2.0"
+cortex-m = "0.6.0"
+cortex-m-rt = "0.6.10"
+panic-semihosting = "0.5.2"
+stm32f1 = { version = "0.8.0", features = ["rt", "stm32f103"] }
+
+[build-dependencies]
+cc = "1.0"
+
+[profile.release]
+lto = true
+panic = "abort"
+
+# Setting these prevents Cargo from trying to test or bench the crate
+[stm32f103-vga-rs]
+test = false
+bench = false
