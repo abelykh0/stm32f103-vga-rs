@@ -3,12 +3,18 @@
 
 extern crate panic_halt;
 extern crate stm32f1;
+extern crate cortex_m_semihosting; 
 
 use cortex_m_rt::{entry};
 use stm32f1::stm32f103 as device;
+use cortex_m_semihosting::hio;
+use core::fmt::Write;
 
 #[entry]
 fn main() -> ! {
+    let mut debug_out = hio::hstdout().unwrap();
+    write!(debug_out, "Hello, world!").unwrap();
+
     let p = device::Peripherals::take().unwrap();
 
     configure_clocks(&p.RCC, &p.FLASH);
