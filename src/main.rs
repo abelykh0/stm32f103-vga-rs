@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 
+pub mod spin_lock;
+
 const HSIZE_CHARS : u16 = 36;
 //const VSIZE_CHARS : u16 = 37;
 
@@ -11,6 +13,8 @@ extern crate cortex_m_semihosting;
 use cortex_m_rt::{entry};
 use stm32f1::stm32f103 as device;
 use device::interrupt;
+use spin_lock::SpinLock;
+use spin_lock::SpinLockGuard;
 //use cortex_m_semihosting::hio;
 //use core::fmt::Write;
 use cortex_m::asm::delay;
@@ -21,13 +25,14 @@ fn main() -> ! {
     let p = device::Peripherals::take().unwrap();
 
     configure_clocks(&p.RCC, &p.FLASH);
-    init_vga(&mut cp, &p);
     
     // Configure SysTick
-    let mut syst = cp.SYST;
+    let syst = &mut cp.SYST;
     syst.set_clock_source(cortex_m::peripheral::syst::SystClkSource::Core);
     syst.set_reload(1_000);
     syst.enable_counter();
+
+    init_vga(&mut cp, &p);
 
     // LED is on GPIOC, pin 13
     p.RCC.apb2enr.modify(|_r, w| w.iopcen().set_bit());
@@ -63,7 +68,7 @@ pub fn init_vga(
 {
     // Set PA0..PA5 to OUTPUT with high speed
     p.RCC.apb2enr.modify(|_r, w| w.iopaen().set_bit());
-    p.GPIOC.crl.modify(|_r, w| { w
+    p.GPIOA.crl.modify(|_r, w| { w
         .mode0().output50().cnf0().push_pull()
         .mode1().output50().cnf1().push_pull()
         .mode2().output50().cnf2().push_pull()
@@ -74,7 +79,7 @@ pub fn init_vga(
 
     // HSync on PB0 and VSync on PB6
     p.RCC.apb2enr.modify(|_r, w| w.iopben().set_bit());
-    p.GPIOC.crl.modify(|_r, w| { w
+    p.GPIOB.crl.modify(|_r, w| { w
         .mode0().output50().cnf0().alt_push_pull()
         .mode6().output50().cnf6().alt_push_pull()
     });
@@ -162,7 +167,7 @@ pub fn init_v_sync(
     tim4.cr1.modify(|_, w| w.cen().set_bit());
     //*isr::shock::SHOCK_TIMER.try_lock().unwrap() = Some(tim3);
 
-    cp.NVIC.enable(device::Interrupt::TIM4);
+    //cp.NVIC.enable(device::Interrupt::TIM4);
 }
 
 pub fn init_h_sync(
@@ -266,8 +271,8 @@ pub fn init_h_sync(
 
     // Turn on both our device interrupts. We need to turn on TIM2 before
     // TIM3 or TIM3 may just wake up and idle forever.
-    cp.NVIC.enable(device::Interrupt::TIM2);
-    cp.NVIC.enable(device::Interrupt::TIM3);
+    //cp.NVIC.enable(device::Interrupt::TIM2);
+    //cp.NVIC.enable(device::Interrupt::TIM3);
 }
 
 macro_rules! block_while {
@@ -324,10 +329,37 @@ pub fn configure_clocks(rcc: &device::RCC, flash: &device::FLASH) {
     block_until! { rcc.cfgr.read().sws() == device::rcc::cfgr::SWSR::PLL }
 }
 
+pub static SHOCK_TIMER: SpinLock<Option<device::TIM2>> = SpinLock::new(None);
+
+/// Pattern for acquiring hardware resources loaned to an ISR in a static.
+///
+/// # Panics
+///
+/// If the `SpinLock` is locked when this is called. This would imply:
+///
+/// 1. that the IRQ got enabled too early, while the hardware is being
+///    provisioned;
+/// 2. That two ISRs are attempting to use the hardware without coordination.
+/// 3. That a previous invocation of an ISR leaked the lock guard.
+///
+/// Also: if this is called before hardware is provisioned, implying that the
+/// IRQ was enabled too early.
+fn acquire_hw<T: Send>(lock: &SpinLock<Option<T>>) -> SpinLockGuard<T> {
+    SpinLockGuard::map(lock.try_lock().expect("HW lock held at ISR"), |o| {
+        o.as_mut().expect("ISR fired without HW available")
+    })
+}
+
 #[interrupt]
 fn TIM2() 
 {
-}
+    // Acknowledge IRQ
+    acquire_hw(&SHOCK_TIMER)
+        .sr
+        .modify(|_, w| w.cc2if().clear_bit());
+
+    // Idle the CPU until an interrupt arrives
+    cortex_m::asm::wfi()}
 
 #[interrupt]
 fn TIM3() 
