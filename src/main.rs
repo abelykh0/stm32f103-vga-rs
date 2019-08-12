@@ -85,9 +85,9 @@ pub fn init_vga(
     });
 
     unsafe {
-        cp.NVIC.set_priority(device::Interrupt::TIM2, 0x00);
-        cp.NVIC.set_priority(device::Interrupt::TIM3, 0x10);
-        cp.NVIC.set_priority(device::Interrupt::TIM4, 0x10);
+        cp.NVIC.set_priority(device::Interrupt::TIM2, 0x10);
+        cp.NVIC.set_priority(device::Interrupt::TIM3, 0x00);
+        cp.NVIC.set_priority(device::Interrupt::TIM4, 0x00);
         //scb.set_priority(SystemHandler::PendSV, 0xFF);
     }
 
@@ -143,7 +143,7 @@ pub fn init_v_sync(
     );
 
     // TIM4CH1: VSync on pin PB6
-    tim4.ccr2.write(|w| w.ccr().bits(sync_pulse));
+    tim4.ccr1.write(|w| w.ccr().bits(sync_pulse));
     tim4.ccmr1_output().write(|w| w
         .cc1s().output()
         .oc1fe().set_bit()
@@ -249,7 +249,7 @@ pub fn init_h_sync(
     );
 
     // TIM3CH3: HSync on pin PB0
-    tim3.ccr2.write(|w| w.ccr().bits(sync_pulse));
+    tim3.ccr3.write(|w| w.ccr().bits(sync_pulse));
     tim3.ccmr2_output().write(|w| w
         .cc3s().output()
         .oc3fe().set_bit()
