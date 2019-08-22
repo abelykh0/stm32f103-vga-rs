@@ -64,6 +64,7 @@ const APP: () = {
     fn PendSV() {
     }
 
+    // Enabled manually
     #[interrupt (priority = 15, resources = [TIM2])]
     fn TIM2() 
     {
@@ -74,6 +75,7 @@ const APP: () = {
         cortex_m::asm::wfi()
     }
 
+    // Enabled manually
     #[interrupt (priority = 16, resources = [TIM3])]
     fn TIM3() 
     {
