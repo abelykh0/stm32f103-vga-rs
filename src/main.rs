@@ -11,9 +11,9 @@ use stm32f1::stm32f103 as device;
 const APP: () = {
     // Late resorce binding
     static mut GPIOC: device::GPIOC = ();
-    static mut TIM2: device::TIM2 = ();
-    static mut TIM3: device::TIM3 = ();
-    static mut TIM4: device::TIM4 = ();
+    //static mut TIM2: device::TIM2 = ();
+    //static mut TIM3: device::TIM3 = ();
+    //static mut TIM4: device::TIM4 = ();
 
     #[init]
     fn init() -> init::LateResources {
@@ -31,13 +31,13 @@ const APP: () = {
         });
 
         // Initialize VGA
-        //vga::init_vga(&p);
+        vga::init_vga(&device);
 
         init::LateResources { 
-            GPIOC: device.GPIOC,
-            TIM2: device.TIM2,
-            TIM3: device.TIM3,
-            TIM4: device.TIM4
+            GPIOC: device.GPIOC
+            //TIM3: device.TIM3,
+            //TIM2: device.TIM2,
+            //TIM4: device.TIM4
         }
     }
 
@@ -61,9 +61,9 @@ const APP: () = {
         }
     }
 
-    #[exception]
-    fn PendSV() {
-    }
+    // #[exception (priority = 1)]
+    // fn PendSV() {
+    // }
 
     // // Enabled manually
     // #[interrupt (priority = 15, resources = [TIM2])]
@@ -73,17 +73,20 @@ const APP: () = {
     //     resources.TIM2.sr.modify(|_, w| w.cc2if().clear_bit());
 
     //     // Idle the CPU until an interrupt arrives
-    //     cortex_m::asm::wfi()
+    //     //cortex_m::asm::wfi()
     // }
 
-    // // Enabled manually
     // #[interrupt (priority = 16, resources = [TIM3])]
     // fn TIM3() 
     // {
+    //     // Acknowledge IRQ
+    //     resources.TIM3.sr.modify(|_, w| w.cc2if().clear_bit());
     // }
 
     // #[interrupt (priority = 16, resources = [TIM4])]
     // fn TIM4() 
     // {
+    //     // Acknowledge IRQ
+    //     resources.TIM4.sr.modify(|_, w| w.cc4if().clear_bit());
     // }
 };

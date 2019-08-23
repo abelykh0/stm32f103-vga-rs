@@ -17,6 +17,13 @@ pub fn init_vga(
         .mode5().output50().cnf5().push_pull()
     });
 
+    // HSync on PB0 and VSync on PB6
+    p.RCC.apb2enr.modify(|_r, w| w.iopben().set_bit());
+    p.GPIOB.crl.modify(|_r, w| { w
+        .mode0().output50().cnf0().alt_push_pull()
+        .mode6().output50().cnf6().alt_push_pull()
+    });
+
     // CPU is running at 72 MHz
     // VGA is 800x600@56Hz (pixel frequency 36 MHz)
     let real_pixels_per_pixel : u16 = 72 / 18;
@@ -25,7 +32,7 @@ pub fn init_vga(
 	{
 		used_horizontal_pixels = 800 * real_pixels_per_pixel;
 	}
-	let horizontal_offset = ((800 - used_horizontal_pixels) / 2) as u16;
+	let horizontal_offset = ((800 * real_pixels_per_pixel - used_horizontal_pixels) / 2) as u16;
     let factor = 72 / 36;
     let whole_line = factor * 1024;
     let sync_pulse = factor * 72;
@@ -191,8 +198,8 @@ fn init_h_sync(
 
     // Turn on both our device interrupts. We need to turn on TIM3 before
     // TIM2 or TIM2 may just wake up and idle forever.
-    unsafe {
-        cortex_m::peripheral::NVIC::unmask(device::Interrupt::TIM3);
-        cortex_m::peripheral::NVIC::unmask(device::Interrupt::TIM2);
-    }
+    //unsafe {
+    //    cortex_m::peripheral::NVIC::unmask(device::Interrupt::TIM3);
+    //    cortex_m::peripheral::NVIC::unmask(device::Interrupt::TIM2);
+    //}
 }
