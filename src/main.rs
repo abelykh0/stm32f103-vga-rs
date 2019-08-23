@@ -18,21 +18,20 @@ const APP: () = {
     #[init]
     fn init() -> init::LateResources {
         // Configure PLL and flash
-        let p = device::Peripherals::take().unwrap();
-        stm32::configure_clocks(&p.RCC, &p.FLASH);
+        stm32::configure_clocks(&device.RCC, &device.FLASH);
 
         // Configures the system timer to trigger a SysTick exception every second
-        stm32::configure_systick(&mut core.SYST, 72_000_000); // period = 1s
+        stm32::configure_systick(&mut core.SYST, 72_000); // period = 1ms
 
         // Built-in LED is on GPIOC, pin 13
-        p.RCC.apb2enr.modify(|_r, w| w.iopcen().set_bit());
-        p.GPIOC.crh.modify(|_r, w| { w
+        device.RCC.apb2enr.modify(|_r, w| w.iopcen().set_bit());
+        device.GPIOC.crh.modify(|_r, w| { w
             .mode13().output50()
             .cnf13().push_pull()
         });
 
         // Initialize VGA
-        vga::init_vga(&p);
+        //vga::init_vga(&p);
 
         init::LateResources { 
             GPIOC: device.GPIOC,
@@ -46,17 +45,19 @@ const APP: () = {
     fn idle() -> ! {
         loop {
             stm32::delay(1000);
+            //cortex_m::asm::delay(72_000_000);
             resources.GPIOC.brr.write(|w| w.br13().reset());
             stm32::delay(1000);
+            //cortex_m::asm::delay(72_000_000);
             resources.GPIOC.bsrr.write(|w| w.bs13().set());
         }
     }
 
-    #[exception]
+    #[exception (priority = 14)]
     fn SysTick() {
         unsafe {
             let count = stm32::SYSTICK_COUNT.get();
-            *count = *count.wrapping_add(1)
+            *count = (core::num::Wrapping(*count) + core::num::Wrapping(1)).0;
         }
     }
 
@@ -64,25 +65,25 @@ const APP: () = {
     fn PendSV() {
     }
 
-    // Enabled manually
-    #[interrupt (priority = 15, resources = [TIM2])]
-    fn TIM2() 
-    {
-        // Acknowledge IRQ
-        resources.TIM2.sr.modify(|_, w| w.cc2if().clear_bit());
+    // // Enabled manually
+    // #[interrupt (priority = 15, resources = [TIM2])]
+    // fn TIM2() 
+    // {
+    //     // Acknowledge IRQ
+    //     resources.TIM2.sr.modify(|_, w| w.cc2if().clear_bit());
 
-        // Idle the CPU until an interrupt arrives
-        cortex_m::asm::wfi()
-    }
+    //     // Idle the CPU until an interrupt arrives
+    //     cortex_m::asm::wfi()
+    // }
 
-    // Enabled manually
-    #[interrupt (priority = 16, resources = [TIM3])]
-    fn TIM3() 
-    {
-    }
+    // // Enabled manually
+    // #[interrupt (priority = 16, resources = [TIM3])]
+    // fn TIM3() 
+    // {
+    // }
 
-    #[interrupt (priority = 16, resources = [TIM4])]
-    fn TIM4() 
-    {
-    }
+    // #[interrupt (priority = 16, resources = [TIM4])]
+    // fn TIM4() 
+    // {
+    // }
 };

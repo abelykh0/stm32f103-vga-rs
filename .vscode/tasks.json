@@ -21,7 +21,7 @@
             //  The compiled main program will be located at "stm32-blue-pill-rust/target/thumbv7m-none-eabi/release/stm32-blue-pill-rust"
             "label": "🔨 Build (STM32 Blue Pill Rust)",
             "type": "shell",
-            "command": "cargo build --release",
+            "command": "cargo build",
             "group": {
                 "kind": "build",
                 "isDefault": true
