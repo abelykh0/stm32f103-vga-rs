@@ -95,10 +95,11 @@ const APP: () = {
             //    &Vga::ScreenCharacters[offset],
             //   &Vga::ScreenAttributes[offset],
             //    GPIO_ODR);
+            cortex_m::asm::delay(140);
             unsafe {
                 resources.GPIOA.odr.write(|w| w.bits(0x02));
             }
-            cortex_m::asm::delay(20);
+            cortex_m::asm::delay(50);
             unsafe {
                 resources.GPIOA.odr.write(|w| w.bits(0x0));
             }

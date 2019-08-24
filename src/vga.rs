@@ -97,7 +97,6 @@ fn init_v_sync(
 
     // Enable TIM4 IRQ
     tim4.dier.write(|w| w
-        .uie().set_bit()
         .cc4ie().set_bit()
     );
     
@@ -195,7 +194,6 @@ fn init_h_sync(
 
     // Enable TIM3 IRQ
     tim3.dier.write(|w| w
-        .uie().set_bit()
         .cc2ie().set_bit()
     );
 
