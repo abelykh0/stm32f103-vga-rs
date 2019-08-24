@@ -51,6 +51,7 @@ fn init_v_sync(
     p.RCC.apb1enr.modify(|_, w| w.tim4en().set_bit());
     let tim4 = &p.TIM4;
     tim4.arr.write(|w| w.arr().bits(whole_frame - 1));
+    tim4.cnt.write(|w| w.cnt().bits(0));
     tim4.cr1.write(|w| w
         .opm().disabled()
         .dir().up()
@@ -114,6 +115,7 @@ fn init_h_sync(
     p.RCC.apb1enr.modify(|_, w| w.tim2en().set_bit());
     let tim2 = &p.TIM2;
     tim2.arr.write(|w| w.arr().bits(whole_line - 1));
+    tim2.cnt.write(|w| w.cnt().bits(0));
     tim2.cr1.write(|w| w
         .opm().disabled()
         .dir().up()
@@ -148,6 +150,7 @@ fn init_h_sync(
     p.RCC.apb1enr.modify(|_, w| w.tim3en().set_bit());
     let tim3 = &p.TIM3;
     tim3.arr.write(|w| w.arr().bits(whole_line - 1));
+    tim3.cnt.write(|w| w.cnt().bits(0));
     tim3.cr1.write(|w| w
         .opm().disabled()
         .dir().up()
