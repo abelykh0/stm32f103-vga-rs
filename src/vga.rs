@@ -1,4 +1,4 @@
-const HSIZE_CHARS : u16 = 36;
+pub const HSIZE_CHARS : u16 = 36;
 
 extern crate panic_halt;
 use stm32f1::stm32f103 as device;
@@ -86,7 +86,7 @@ fn init_v_sync(
     );
 
     // TIM4CH4 triggers interrupt
-    tim4.ccr2.write(|w| w.ccr().bits(start_draw));
+    tim4.ccr4.write(|w| w.ccr().bits(start_draw));
     tim4.ccmr2_output().write(|w| w
         .cc4s().output()
         .oc4m().frozen()
@@ -95,6 +95,12 @@ fn init_v_sync(
         .cc4g().set_bit()
     );
 
+    // Enable TIM4 IRQ
+    tim4.dier.write(|w| w
+        .uie().set_bit()
+        .cc4ie().set_bit()
+    );
+    
     // Start TIM4
     tim4.cr1.modify(|_, w| w.cen().set_bit());
 }

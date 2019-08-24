@@ -10,10 +10,16 @@ use stm32f1::stm32f103 as device;
 #[app(device = stm32f1::stm32f103)]
 const APP: () = {
     // Late resorce binding
+    static mut GPIOA: device::GPIOA = ();
     static mut GPIOC: device::GPIOC = ();
-    //static mut TIM2: device::TIM2 = ();
-    //static mut TIM3: device::TIM3 = ();
-    //static mut TIM4: device::TIM4 = ();
+    static mut TIM2: device::TIM2 = ();
+    static mut TIM3: device::TIM3 = ();
+    static mut TIM4: device::TIM4 = ();
+
+    // VGA
+    static mut VLINE: i32 = 0; /* The current line being drawn */
+    static mut VFLAG: bool = true; /* When true, can draw on the screen */
+    //const GPIO_ODR: *device::gpioa::RegisterBlock = device::GPIOC::ptr();
 
     #[init]
     fn init() -> init::LateResources {
@@ -34,10 +40,11 @@ const APP: () = {
         vga::init_vga(&device);
 
         init::LateResources { 
-            GPIOC: device.GPIOC
-            //TIM3: device.TIM3,
-            //TIM2: device.TIM2,
-            //TIM4: device.TIM4
+            GPIOA: device.GPIOA,
+            GPIOC: device.GPIOC,
+            TIM2: device.TIM2,
+            TIM3: device.TIM3,
+            TIM4: device.TIM4
         }
     }
 
@@ -65,28 +72,52 @@ const APP: () = {
     // fn PendSV() {
     // }
 
-    // // Enabled manually
-    // #[interrupt (priority = 15, resources = [TIM2])]
-    // fn TIM2() 
-    // {
-    //     // Acknowledge IRQ
-    //     resources.TIM2.sr.modify(|_, w| w.cc2if().clear_bit());
+    #[interrupt (priority = 15, resources = [TIM2])]
+    fn TIM2() 
+    {
+        // Acknowledge IRQ
+        resources.TIM2.sr.modify(|_, w| w.cc2if().clear_bit());
 
-    //     // Idle the CPU until an interrupt arrives
-    //     //cortex_m::asm::wfi()
-    // }
+        // Idle the CPU until an interrupt arrives
+        cortex_m::asm::wfi()
+    }
 
-    // #[interrupt (priority = 16, resources = [TIM3])]
-    // fn TIM3() 
-    // {
-    //     // Acknowledge IRQ
-    //     resources.TIM3.sr.modify(|_, w| w.cc2if().clear_bit());
-    // }
+    #[interrupt (priority = 16, resources = [TIM3, GPIOA, VLINE, VFLAG])]
+    fn TIM3() 
+    {
+        // Acknowledge IRQ
+        resources.TIM3.sr.modify(|_, w| w.cc2if().clear_bit());
 
-    // #[interrupt (priority = 16, resources = [TIM4])]
-    // fn TIM4() 
-    // {
-    //     // Acknowledge IRQ
-    //     resources.TIM4.sr.modify(|_, w| w.cc4if().clear_bit());
-    // }
+        // Draw
+        if *resources.VFLAG {
+            //let offset = (*resources.VLINE >> 4) * (vga::HSIZE_CHARS as i32);
+            //vgaDraw((uint8_t*)Vga::font + (vline & 0x0F),
+            //    &Vga::ScreenCharacters[offset],
+            //   &Vga::ScreenAttributes[offset],
+            //    GPIO_ODR);
+            unsafe {
+                resources.GPIOA.odr.write(|w| w.bits(0x02));
+            }
+            cortex_m::asm::delay(20);
+            unsafe {
+                resources.GPIOA.odr.write(|w| w.bits(0x0));
+            }
+
+            *resources.VLINE += 1;
+            if *resources.VLINE == 600 {
+                *resources.VLINE = 0;
+                *resources.VFLAG = false;
+            }
+        }
+    }
+
+    #[interrupt (priority = 16, resources = [TIM4, VLINE, VFLAG])]
+    fn TIM4() 
+    {
+        // Acknowledge IRQ
+        resources.TIM4.sr.modify(|_, w| w.cc4if().clear_bit());
+
+        *resources.VLINE = 0;
+        *resources.VFLAG = true;
+    }
 };
