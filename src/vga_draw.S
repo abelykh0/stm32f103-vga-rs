@@ -7,12 +7,12 @@
 @  r1  uint8_t*  characters
 @  r2  uint32_t* attributes
 @  r3  uint8_t*  dest
-.section	.text.vgaDraw,"ax",%progbits
+.section	.text.vga_draw,"ax",%progbits
 @.section .ramcode,ax,%progbits
 .balign 4
-.global vgaDraw
+.global vga_draw
 .thumb_func
-vgaDraw:
+vga_draw:
 	@ parameters
 	fnt   .req r0
 	chr   .req r1

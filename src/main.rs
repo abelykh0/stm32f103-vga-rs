@@ -51,12 +51,13 @@ const APP: () = {
     #[idle (resources = [GPIOC])]
     fn idle() -> ! {
         loop {
-            stm32::delay(1000);
-            //cortex_m::asm::delay(72_000_000);
             resources.GPIOC.brr.write(|w| w.br13().reset());
             stm32::delay(1000);
             //cortex_m::asm::delay(72_000_000);
+
             resources.GPIOC.bsrr.write(|w| w.bs13().set());
+            stm32::delay(1000);
+            //cortex_m::asm::delay(72_000_000);
         }
     }
 

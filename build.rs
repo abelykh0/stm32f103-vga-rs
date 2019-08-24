@@ -10,9 +10,9 @@ fn main() {
 
 fn build_assembly_sources() {
     cc::Build::new()
-        .file("src/vgaDraw.S")
+        .file("src/vga_draw.S")
         .compile("libunrusted.a");
-    println!("cargo:rerun-if-changed=src/vgaDraw.S");
+    println!("cargo:rerun-if-changed=src/vga_draw.S");
 }
 
 fn linker_script_plumbing() {
