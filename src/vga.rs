@@ -44,11 +44,11 @@ pub fn init_vga(
 
 pub fn init_attribute(attribute: &mut [u8; 64], back_color : u8, fore_color : u8)
 {
-	for i in 1..16 {
+	for i in 0..16 {
 		let mut value = i;
 		let mut index = i << 2;
 		for _bit in 0..4 {
-			attribute[index] = if value & 0x08 == 0 { fore_color } else { back_color };
+			attribute[index] = if value & 0x08 == 0 { back_color } else { fore_color };
 			value <<= 1;
 			index += 1;
 		}
