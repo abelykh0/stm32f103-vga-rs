@@ -2,8 +2,11 @@
 #![no_main]
 
 extern crate panic_halt;
+
 mod stm32;
 mod vga;
+mod vga_draw;
+
 use rtfm::app;
 use stm32f1::stm32f103 as device;
 
@@ -19,9 +22,12 @@ const APP: () = {
     // VGA
     static mut VLINE: i32 = 0; /* The current line being drawn */
     static mut VFLAG: bool = true; /* When true, can draw on the screen */
+    static mut PIXELS: [u8; (vga::HSIZE_CHARS * 8 * vga::VSIZE_CHARS) as usize] = [0; (vga::HSIZE_CHARS * 8 * vga::VSIZE_CHARS) as usize];
+    static mut ATTRIBUTES: [u8; (vga::HSIZE_CHARS * vga::VSIZE_CHARS) as usize] = [0; (vga::HSIZE_CHARS * vga::VSIZE_CHARS) as usize];
+    static mut DEFAULT_ATTRIBUTE: [u8; 64] = [0; 64];
     //const GPIO_ODR: *device::gpioa::RegisterBlock = device::GPIOC::ptr();
 
-    #[init]
+    #[init (resources = [DEFAULT_ATTRIBUTE])]
     fn init() -> init::LateResources {
         // Configure PLL and flash
         stm32::configure_clocks(&device.RCC, &device.FLASH);
@@ -37,6 +43,7 @@ const APP: () = {
         });
 
         // Initialize VGA
+        vga::init_attribute(&mut *resources.DEFAULT_ATTRIBUTE, 0x10, 0x3F);
         vga::init_vga(&device);
 
         init::LateResources { 
@@ -83,32 +90,26 @@ const APP: () = {
         cortex_m::asm::wfi()
     }
 
-    #[interrupt (priority = 16, resources = [TIM3, GPIOA, VLINE, VFLAG])]
+    #[interrupt (priority = 16, resources = [TIM3, GPIOA, VLINE, VFLAG, PIXELS, ATTRIBUTES, DEFAULT_ATTRIBUTE])]
     fn TIM3() 
     {
         // Acknowledge IRQ
         resources.TIM3.sr.modify(|_, w| w.cc2if().clear_bit());
 
         // Draw
-        if *resources.VFLAG {
-            //let offset = (*resources.VLINE >> 4) * (vga::HSIZE_CHARS as i32);
-            //vgaDraw((uint8_t*)Vga::font + (vline & 0x0F),
-            //    &Vga::ScreenCharacters[offset],
-            //   &Vga::ScreenAttributes[offset],
-            //    GPIO_ODR);
-            cortex_m::asm::delay(140);
-            unsafe {
-                resources.GPIOA.odr.write(|w| w.bits(0x02));
-            }
-            cortex_m::asm::delay(50);
-            unsafe {
-                resources.GPIOA.odr.write(|w| w.bits(0x0));
-            }
+        unsafe {
+            if *resources.VFLAG {
+                vga_draw::vga_draw_impl(
+                    &*resources.PIXELS.as_ptr().offset(*resources.VLINE as isize * vga::HSIZE_CHARS as isize),
+                    &*resources.DEFAULT_ATTRIBUTE.as_ptr(),
+                    &*resources.ATTRIBUTES.as_ptr().offset(*resources.VLINE as isize / 8 * vga::HSIZE_CHARS as isize),
+                    0x4001080C as _);
 
-            *resources.VLINE += 1;
-            if *resources.VLINE == 600 {
-                *resources.VLINE = 0;
-                *resources.VFLAG = false;
+                *resources.VLINE += 1;
+                if *resources.VLINE == 600 {
+                    *resources.VLINE = 0;
+                    *resources.VFLAG = false;
+                }
             }
         }
     }

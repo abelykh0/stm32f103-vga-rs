@@ -1,4 +1,5 @@
-pub const HSIZE_CHARS : u16 = 36;
+pub const HSIZE_CHARS : u16 = 40;
+pub const VSIZE_CHARS : u16 = 37;
 
 extern crate panic_halt;
 use stm32f1::stm32f103 as device;
@@ -36,9 +37,22 @@ pub fn init_vga(
     let factor = 72 / 36;
     let whole_line = factor * 1024;
     let sync_pulse = factor * 72;
-    let start_draw = factor * 72 - 24 + 70;
+    let start_draw = factor * 72 - 24 + 150;
     init_h_sync(p, whole_line, sync_pulse, start_draw + horizontal_offset);
     init_v_sync(p, 625, 2, 25);
+}
+
+pub fn init_attribute(attribute: &mut [u8; 64], back_color : u8, fore_color : u8)
+{
+	for i in 1..16 {
+		let mut value = i;
+		let mut index = i << 2;
+		for _bit in 0..4 {
+			attribute[index] = if value & 0x08 == 0 { fore_color } else { back_color };
+			value <<= 1;
+			index += 1;
+		}
+	}
 }
 
 fn init_v_sync(

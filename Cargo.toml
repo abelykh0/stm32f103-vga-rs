@@ -9,7 +9,8 @@ panic-halt = "0.2.0"
 cortex-m = "0.6.1"
 cortex-m-rt = "0.6.10"
 cortex-m-rtfm = "0.4.3"
-panic-semihosting = "0.5.2"
+panic-semihosting = "0.5.3"
+embedded-graphics = "0.5.2"
 stm32f1 = { version = "0.8.0", features = ["rt", "stm32f103"] }
 
 [build-dependencies]

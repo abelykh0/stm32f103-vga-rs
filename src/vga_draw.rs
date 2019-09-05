@@ -1,3 +1,3 @@
 extern "C" {
-    fn vga_draw(font: *const u8, characters: *const u8, attributes: *const u32, dest: *const u8);
+    pub fn vga_draw_impl(pix: *const u8, attr_base: *const u8, attr: *const u8, odr: *const u8);
 }
