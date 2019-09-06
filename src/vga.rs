@@ -216,11 +216,4 @@ fn init_h_sync(
 
     // Start TIM2, which starts TIM3
     tim2.cr1.modify(|_, w| w.cen().set_bit());
-
-    // Turn on both our device interrupts. We need to turn on TIM3 before
-    // TIM2 or TIM2 may just wake up and idle forever.
-    //unsafe {
-    //    cortex_m::peripheral::NVIC::unmask(device::Interrupt::TIM3);
-    //    cortex_m::peripheral::NVIC::unmask(device::Interrupt::TIM2);
-    //}
 }

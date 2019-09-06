@@ -21,6 +21,7 @@ const APP: () = {
 
     // VGA
     static mut VLINE: i32 = 0; /* The current line being drawn */
+    static mut VDRAW: i32 = 0; /* Used to increment vline every 2 drawn lines */
     static mut VFLAG: bool = true; /* When true, can draw on the screen */
     static mut PIXELS: [u8; (vga::HSIZE_CHARS * 8 * vga::VSIZE_CHARS) as usize] = [0; (vga::HSIZE_CHARS * 8 * vga::VSIZE_CHARS) as usize];
     static mut ATTRIBUTES: [u8; (vga::HSIZE_CHARS * vga::VSIZE_CHARS) as usize] = [0; (vga::HSIZE_CHARS * vga::VSIZE_CHARS) as usize];
@@ -90,7 +91,7 @@ const APP: () = {
         cortex_m::asm::wfi()
     }
 
-    #[interrupt (priority = 16, resources = [TIM3, GPIOA, VLINE, VFLAG, PIXELS, ATTRIBUTES, DEFAULT_ATTRIBUTE])]
+    #[interrupt (priority = 16, resources = [TIM3, GPIOA, VLINE, VDRAW, VFLAG, PIXELS, ATTRIBUTES, DEFAULT_ATTRIBUTE])]
     fn TIM3() 
     {
         // Acknowledge IRQ
@@ -99,16 +100,25 @@ const APP: () = {
         // Draw
         unsafe {
             if *resources.VFLAG {
+                resources.GPIOA.odr.write(|w| w.bits(0x02));
+                cortex_m::asm::delay(20);
+                resources.GPIOA.odr.write(|w| w.bits(0x0));
                 vga_draw::vga_draw_impl(
                     &*resources.PIXELS.as_ptr().offset(*resources.VLINE as isize * vga::HSIZE_CHARS as isize),
                     &*resources.DEFAULT_ATTRIBUTE.as_ptr(),
                     &*resources.ATTRIBUTES.as_ptr().offset(*resources.VLINE as isize / 8 * vga::HSIZE_CHARS as isize),
                     0x4001080C as _);
+                resources.GPIOA.odr.write(|w| w.bits(0x02));
 
-                *resources.VLINE += 1;
-                if *resources.VLINE == 600 {
-                    *resources.VLINE = 0;
-                    *resources.VFLAG = false;
+                *resources.VDRAW += 1;
+                if *resources.VDRAW == 2 {
+                    *resources.VDRAW = 0;
+                    *resources.VLINE += 1;
+                    if *resources.VLINE == vga::VSIZE_CHARS as i32 * 8 {
+                        *resources.VLINE = 0;
+                        *resources.VDRAW = 0;
+                        *resources.VFLAG = false;
+                    }
                 }
             }
         }

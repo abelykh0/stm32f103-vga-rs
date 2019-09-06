@@ -1,4 +1,4 @@
-#define HSIZE_CHARS 40
+#define HSIZE_CHARS 10
 
 .syntax unified
 
