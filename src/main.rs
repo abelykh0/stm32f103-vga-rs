@@ -11,7 +11,7 @@ use rtfm::app;
 use stm32f1::stm32f103 as device;
 use embedded_graphics::prelude::*;
 use embedded_graphics::fonts::Font12x16;
-use embedded_graphics::primitives::{Line};
+use embedded_graphics::primitives:: {Circle, Line, Rectangle, Triangle};
 use embedded_graphics::pixelcolor::BinaryColor;
 
 #[app(device = stm32f1::stm32f103)]
@@ -66,6 +66,15 @@ const APP: () = {
         );
         resources.DISPLAY.draw(
             Line::new(Point::new(80, 5), Point::new(200, 35)).stroke(Some(BinaryColor::On))
+        );
+        resources.DISPLAY.draw(
+            Circle::new(Point::new(80, 80), 40).stroke(Some(BinaryColor::On)).fill(Some(BinaryColor::On))
+        );
+        resources.DISPLAY.draw(
+            Triangle::new(Point::new(180, 180), Point::new(120, 180), Point::new(180, 120)).stroke(Some(BinaryColor::On))
+        );
+        resources.DISPLAY.draw(
+            Rectangle::new(Point::new(210, 210), Point::new(250, 250)).stroke(Some(BinaryColor::On)).stroke_width(3)
         );
 
         init::LateResources { 
