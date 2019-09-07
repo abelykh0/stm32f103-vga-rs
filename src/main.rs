@@ -121,30 +121,27 @@ const APP: () = {
         cortex_m::asm::wfi()
     }
 
-    #[interrupt (priority = 16, resources = [TIM3, GPIOA, VLINE, VDRAW, VFLAG, DISPLAY])]
+    #[interrupt (priority = 16, resources = [TIM3, VLINE, VDRAW, VFLAG, DISPLAY])]
     fn TIM3() 
     {
         // Acknowledge IRQ
         resources.TIM3.sr.modify(|_, w| w.cc2if().clear_bit());
 
         // Draw
-        unsafe {
-            if *resources.VFLAG {
-                vga_draw::vga_draw_impl(
-                    &*resources.DISPLAY.pixels.as_ptr().offset(*resources.VLINE as isize * vga::HSIZE_CHARS as isize),
-                    &*resources.DISPLAY.default_attribute.as_ptr(),
-                    &*resources.DISPLAY.attributes.as_ptr().offset(*resources.VLINE as isize / 8 * vga::HSIZE_CHARS as isize),
-                    0x4001080C as _);
+        if *resources.VFLAG {
+            vga_draw::vga_draw(
+                &resources.DISPLAY.pixels[*resources.VLINE as usize * vga::HSIZE_CHARS as usize..],
+                &resources.DISPLAY.default_attribute[..],
+                &resources.DISPLAY.attributes[*resources.VLINE as usize / 8 * vga::HSIZE_CHARS as usize..]);
 
-                *resources.VDRAW += 1;
-                if *resources.VDRAW == 2 {
+            *resources.VDRAW += 1;
+            if *resources.VDRAW == 2 {
+                *resources.VDRAW = 0;
+                *resources.VLINE += 1;
+                if *resources.VLINE == vga::VSIZE_CHARS as i32 * 8 {
+                    *resources.VLINE = 0;
                     *resources.VDRAW = 0;
-                    *resources.VLINE += 1;
-                    if *resources.VLINE == vga::VSIZE_CHARS as i32 * 8 {
-                        *resources.VLINE = 0;
-                        *resources.VDRAW = 0;
-                        *resources.VFLAG = false;
-                    }
+                    *resources.VFLAG = false;
                 }
             }
         }
