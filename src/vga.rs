@@ -1,4 +1,4 @@
-pub const HSIZE_CHARS : u16 = 40;
+pub const HSIZE_CHARS : u16 = 44;
 pub const VSIZE_CHARS : u16 = 37;
 
 extern crate panic_halt;
@@ -78,18 +78,19 @@ pub fn init_vga(
 
     // CPU is running at 72 MHz
     // VGA is 800x600@56Hz (pixel frequency 36 MHz)
-    let real_pixels_per_pixel : u16 = 72 / 18;
+    let real_pixels_per_pixel : u16 = 36 / 18;
 	let mut used_horizontal_pixels = HSIZE_CHARS * 8 * real_pixels_per_pixel;
-	if used_horizontal_pixels > 800 * real_pixels_per_pixel
+	if used_horizontal_pixels > 800
 	{
-		used_horizontal_pixels = 800 * real_pixels_per_pixel;
+		used_horizontal_pixels = 800;
 	}
-	let horizontal_offset = ((800 * real_pixels_per_pixel - used_horizontal_pixels) / 2) as u16;
+	let horizontal_offset = ((800 - used_horizontal_pixels) / 2) as u16;
     let factor = 72 / 36;
     let whole_line = factor * 1024;
     let sync_pulse = factor * 72;
     let start_draw = factor * (72 - 24) + 150;
     init_h_sync(p, whole_line, sync_pulse, start_draw + horizontal_offset);
+
     init_v_sync(p, 625, 2, 25);
 }
 
