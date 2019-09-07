@@ -20,15 +20,17 @@ const APP: () = {
     static mut TIM4: device::TIM4 = ();
 
     // VGA
+    static mut DISPLAY : vga::VgaDisplay = vga::VgaDisplay {
+        pixels : [0; (vga::HSIZE_CHARS * 8 * vga::VSIZE_CHARS) as usize],
+        attributes : [0; (vga::HSIZE_CHARS * vga::VSIZE_CHARS) as usize],
+        default_attribute : [0; 64]
+    };
     static mut VLINE: i32 = 0; /* The current line being drawn */
     static mut VDRAW: i32 = 0; /* Used to increment vline every 2 drawn lines */
     static mut VFLAG: bool = true; /* When true, can draw on the screen */
-    static mut PIXELS: [u8; (vga::HSIZE_CHARS * 8 * vga::VSIZE_CHARS) as usize] = [0; (vga::HSIZE_CHARS * 8 * vga::VSIZE_CHARS) as usize];
-    static mut ATTRIBUTES: [u8; (vga::HSIZE_CHARS * vga::VSIZE_CHARS) as usize] = [0; (vga::HSIZE_CHARS * vga::VSIZE_CHARS) as usize];
-    static mut DEFAULT_ATTRIBUTE: [u8; 64] = [0; 64];
-    //const GPIO_ODR: *device::gpioa::RegisterBlock = device::GPIOC::ptr();
+    //const GPIO_ODR: *device::gpioa::RegisterBlock = device::GPIOA::ptr();
 
-    #[init (resources = [DEFAULT_ATTRIBUTE])]
+    #[init (resources = [DISPLAY])]
     fn init() -> init::LateResources {
         // Configure PLL and flash
         stm32::configure_clocks(&device.RCC, &device.FLASH);
@@ -44,7 +46,7 @@ const APP: () = {
         });
 
         // Initialize VGA
-        vga::init_attribute(&mut *resources.DEFAULT_ATTRIBUTE, 0x10, 0x3F);
+        resources.DISPLAY.init_attribute(0x10, 0x3F);
         vga::init_vga(&device);
 
         init::LateResources { 
@@ -91,7 +93,7 @@ const APP: () = {
         cortex_m::asm::wfi()
     }
 
-    #[interrupt (priority = 16, resources = [TIM3, GPIOA, VLINE, VDRAW, VFLAG, PIXELS, ATTRIBUTES, DEFAULT_ATTRIBUTE])]
+    #[interrupt (priority = 16, resources = [TIM3, GPIOA, VLINE, VDRAW, VFLAG, DISPLAY])]
     fn TIM3() 
     {
         // Acknowledge IRQ
@@ -101,14 +103,13 @@ const APP: () = {
         unsafe {
             if *resources.VFLAG {
                 resources.GPIOA.odr.write(|w| w.bits(0x02));
-                cortex_m::asm::delay(20);
+                cortex_m::asm::delay(5);
                 resources.GPIOA.odr.write(|w| w.bits(0x0));
                 vga_draw::vga_draw_impl(
-                    &*resources.PIXELS.as_ptr().offset(*resources.VLINE as isize * vga::HSIZE_CHARS as isize),
-                    &*resources.DEFAULT_ATTRIBUTE.as_ptr(),
-                    &*resources.ATTRIBUTES.as_ptr().offset(*resources.VLINE as isize / 8 * vga::HSIZE_CHARS as isize),
+                    &*resources.DISPLAY.pixels.as_ptr().offset(*resources.VLINE as isize * vga::HSIZE_CHARS as isize),
+                    &*resources.DISPLAY.default_attribute.as_ptr(),
+                    &*resources.DISPLAY.attributes.as_ptr().offset(*resources.VLINE as isize / 8 * vga::HSIZE_CHARS as isize),
                     0x4001080C as _);
-                resources.GPIOA.odr.write(|w| w.bits(0x02));
 
                 *resources.VDRAW += 1;
                 if *resources.VDRAW == 2 {

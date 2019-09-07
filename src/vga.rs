@@ -3,6 +3,57 @@ pub const VSIZE_CHARS : u16 = 37;
 
 extern crate panic_halt;
 use stm32f1::stm32f103 as device;
+use embedded_graphics::prelude::*;
+use embedded_graphics::Drawing;
+use embedded_graphics::pixelcolor::BinaryColor;
+
+/// VGA display
+pub struct VgaDisplay {
+    pub pixels: [u8; (HSIZE_CHARS * 8 * VSIZE_CHARS) as usize],
+    pub attributes : [u8; (HSIZE_CHARS * VSIZE_CHARS) as usize],
+    pub default_attribute : [u8; 64]
+}
+
+impl VgaDisplay {
+    pub fn init_attribute(&mut self, back_color : u8, fore_color : u8)
+    {
+        for i in 0..16 {
+            let mut value = i;
+            let mut index = i << 2;
+            for _bit in 0..4 {
+                self.attributes[index] = if value & 0x08 == 0 { back_color } else { fore_color };
+                value <<= 1;
+                index += 1;
+            }
+        }
+    }
+
+    fn write_pixel(&mut self, x: u16, y: u16, val: BinaryColor) {
+        if x >= HSIZE_CHARS * 8 || y >= VSIZE_CHARS * 8 {
+            return
+        }
+
+        let bit = x & 0x07;
+        let byte = x >> 3;
+
+        if val == BinaryColor::Off {
+            self.pixels[(y * HSIZE_CHARS + byte) as usize] &= !(1 << bit);
+        } else {
+            self.pixels[(y * HSIZE_CHARS + byte) as usize] |= 1 << bit;
+        }
+    }
+}
+
+impl Drawing<BinaryColor> for VgaDisplay {
+    fn draw<T>(&mut self, item_pixels: T)
+        where T: IntoIterator<Item = Pixel<BinaryColor>>,
+    {
+        for pixel in item_pixels {
+            let point = pixel.0;
+            self.write_pixel(point.x as u16, point.y as u16, pixel.1);
+        }
+    }
+}
 
 pub fn init_vga(
     p: &device::Peripherals) 
@@ -40,19 +91,6 @@ pub fn init_vga(
     let start_draw = factor * 72 - 24 + 150;
     init_h_sync(p, whole_line, sync_pulse, start_draw + horizontal_offset);
     init_v_sync(p, 625, 2, 25);
-}
-
-pub fn init_attribute(attribute: &mut [u8; 64], back_color : u8, fore_color : u8)
-{
-	for i in 0..16 {
-		let mut value = i;
-		let mut index = i << 2;
-		for _bit in 0..4 {
-			attribute[index] = if value & 0x08 == 0 { back_color } else { fore_color };
-			value <<= 1;
-			index += 1;
-		}
-	}
 }
 
 fn init_v_sync(
