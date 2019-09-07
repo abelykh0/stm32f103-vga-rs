@@ -11,7 +11,7 @@ use rtfm::app;
 use stm32f1::stm32f103 as device;
 use embedded_graphics::prelude::*;
 use embedded_graphics::fonts::Font12x16;
-//use embedded_graphics::primitives::{Circle, Line};
+use embedded_graphics::primitives::{Line};
 use embedded_graphics::pixelcolor::BinaryColor;
 
 #[app(device = stm32f1::stm32f103)]
@@ -63,6 +63,9 @@ const APP: () = {
             Font12x16::render_str("World!")
                 .stroke(Some(BinaryColor::On))
                 .translate(Point::new(80, 25))
+        );
+        resources.DISPLAY.draw(
+            Line::new(Point::new(80, 5), Point::new(200, 35)).stroke(Some(BinaryColor::On))
         );
 
         init::LateResources { 

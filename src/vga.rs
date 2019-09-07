@@ -33,7 +33,7 @@ impl VgaDisplay {
             return
         }
 
-        let bit = x & 0x07 - 1;
+        let bit = x & 0x07;
         let byte = x >> 3;
 
         if val == BinaryColor::Off {
