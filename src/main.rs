@@ -9,6 +9,10 @@ mod vga_draw;
 
 use rtfm::app;
 use stm32f1::stm32f103 as device;
+use embedded_graphics::prelude::*;
+use embedded_graphics::fonts::Font12x16;
+//use embedded_graphics::primitives::{Circle, Line};
+use embedded_graphics::pixelcolor::BinaryColor;
 
 #[app(device = stm32f1::stm32f103)]
 const APP: () = {
@@ -46,8 +50,15 @@ const APP: () = {
         });
 
         // Initialize VGA
-        resources.DISPLAY.init_attribute(0x10, 0x3F);
+        resources.DISPLAY.init_default_attribute(0x10, 0x3F);
         vga::init_vga(&device);
+
+        // Draw 
+        resources.DISPLAY.draw(
+            Font12x16::render_str("Hello World!")
+                .stroke(Some(BinaryColor::On))
+                .translate(Point::new(5, 5))
+        );
 
         init::LateResources { 
             GPIOA: device.GPIOA,
@@ -102,9 +113,6 @@ const APP: () = {
         // Draw
         unsafe {
             if *resources.VFLAG {
-                resources.GPIOA.odr.write(|w| w.bits(0x02));
-                cortex_m::asm::delay(5);
-                resources.GPIOA.odr.write(|w| w.bits(0x0));
                 vga_draw::vga_draw_impl(
                     &*resources.DISPLAY.pixels.as_ptr().offset(*resources.VLINE as isize * vga::HSIZE_CHARS as isize),
                     &*resources.DISPLAY.default_attribute.as_ptr(),

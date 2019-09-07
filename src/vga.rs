@@ -15,13 +15,13 @@ pub struct VgaDisplay {
 }
 
 impl VgaDisplay {
-    pub fn init_attribute(&mut self, back_color : u8, fore_color : u8)
+    pub fn init_default_attribute(&mut self, back_color : u8, fore_color : u8)
     {
         for i in 0..16 {
             let mut value = i;
             let mut index = i << 2;
             for _bit in 0..4 {
-                self.attributes[index] = if value & 0x08 == 0 { back_color } else { fore_color };
+                self.default_attribute[index] = if value & 0x08 == 0 { back_color } else { fore_color };
                 value <<= 1;
                 index += 1;
             }
