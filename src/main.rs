@@ -55,9 +55,14 @@ const APP: () = {
 
         // Draw 
         resources.DISPLAY.draw(
-            Font12x16::render_str("Hello World!")
+            Font12x16::render_str("Hello")
                 .stroke(Some(BinaryColor::On))
-                .translate(Point::new(5, 5))
+                .translate(Point::new(80, 5))
+        );
+        resources.DISPLAY.draw(
+            Font12x16::render_str("World!")
+                .stroke(Some(BinaryColor::On))
+                .translate(Point::new(80, 25))
         );
 
         init::LateResources { 

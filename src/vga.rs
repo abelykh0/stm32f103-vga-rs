@@ -33,13 +33,13 @@ impl VgaDisplay {
             return
         }
 
-        let bit = x & 0x07;
+        let bit = x & 0x07 - 1;
         let byte = x >> 3;
 
         if val == BinaryColor::Off {
-            self.pixels[(y * HSIZE_CHARS + byte) as usize] &= !(1 << bit);
+            self.pixels[(y * HSIZE_CHARS + byte) as usize] &= !(0x80 >> bit);
         } else {
-            self.pixels[(y * HSIZE_CHARS + byte) as usize] |= 1 << bit;
+            self.pixels[(y * HSIZE_CHARS + byte) as usize] |= 0x80 >> bit;
         }
     }
 }
@@ -88,7 +88,7 @@ pub fn init_vga(
     let factor = 72 / 36;
     let whole_line = factor * 1024;
     let sync_pulse = factor * 72;
-    let start_draw = factor * 72 - 24 + 150;
+    let start_draw = factor * (72 - 24) + 150;
     init_h_sync(p, whole_line, sync_pulse, start_draw + horizontal_offset);
     init_v_sync(p, 625, 2, 25);
 }
