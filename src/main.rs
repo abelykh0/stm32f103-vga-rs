@@ -8,6 +8,7 @@ use crate::vga::draw::VgaDraw;
 
 use rtfm::app;
 use stm32f1::stm32f103 as device;
+use numtoa::NumToA;
 use embedded_graphics::prelude::*;
 use embedded_graphics::fonts::Font12x16;
 use embedded_graphics::primitives:: {Circle, Line, Rectangle, Triangle};
@@ -28,17 +29,7 @@ const APP: () = {
         attributes : [0; (vga::HSIZE_CHARS * vga::VSIZE_CHARS) as usize],
         default_attribute : [0; 64]
     };
-
-    static mut VGA_DRAW : VgaDraw = VgaDraw {
-        pixels_ptr : 0,
-        attributes_ptr : 0,
-        attribute_definitions_ptr : 0
-    };
-
-    static mut VLINE: u32 = 0; /* The current line being drawn */
-    static mut VDRAW: u32 = 0; /* Used to increment vline every 2 drawn lines */
-    static mut VFLAG: bool = true; /* When true, can draw on the screen */
-    //const GPIO_ODR: *device::gpioa::RegisterBlock = device::GPIOA::ptr();
+    static mut VGA_DRAW : VgaDraw = VgaDraw::new();
 
     #[init (resources = [DISPLAY, VGA_DRAW])]
     fn init() -> init::LateResources {
@@ -60,28 +51,13 @@ const APP: () = {
         resources.VGA_DRAW.init(&resources.DISPLAY);
         vga::display::init_vga(&device);
 
-        // Draw 
+        let mut buffer = [0u8; 20];
+        let count = stm32::get_count();
+        let s = count.numtoa_str(10, &mut buffer);
         resources.DISPLAY.draw(
-            Font12x16::render_str("Hello")
+            Font12x16::render_str(s)
                 .stroke(Some(BinaryColor::On))
                 .translate(Point::new(80, 5))
-        );
-        resources.DISPLAY.draw(
-            Font12x16::render_str("World!")
-                .stroke(Some(BinaryColor::On))
-                .translate(Point::new(80, 25))
-        );
-        resources.DISPLAY.draw(
-            Line::new(Point::new(80, 5), Point::new(200, 35)).stroke(Some(BinaryColor::On))
-        );
-        resources.DISPLAY.draw(
-            Circle::new(Point::new(80, 80), 40).stroke(Some(BinaryColor::On)).fill(Some(BinaryColor::On))
-        );
-        resources.DISPLAY.draw(
-            Triangle::new(Point::new(180, 180), Point::new(120, 180), Point::new(180, 120)).stroke(Some(BinaryColor::On))
-        );
-        resources.DISPLAY.draw(
-            Rectangle::new(Point::new(210, 210), Point::new(250, 250)).stroke(Some(BinaryColor::On)).stroke_width(3)
         );
 
         init::LateResources { 
@@ -106,6 +82,30 @@ const APP: () = {
         }
     }
 
+/*
+    #[task (priority = 10, resources = [DISPLAY])]
+    fn draw() 
+    {
+        resources.DISPLAY.draw(
+            Font12x16::render_str("World!")
+                .stroke(Some(BinaryColor::On))
+                .translate(Point::new(80, 25))
+        );
+        resources.DISPLAY.draw(
+            Line::new(Point::new(80, 5), Point::new(200, 35)).stroke(Some(BinaryColor::On))
+        );
+        resources.DISPLAY.draw(
+            Circle::new(Point::new(80, 80), 40).stroke(Some(BinaryColor::On)).fill(Some(BinaryColor::On))
+        );
+        resources.DISPLAY.draw(
+            Triangle::new(Point::new(180, 180), Point::new(120, 180), Point::new(180, 120)).stroke(Some(BinaryColor::On))
+        );
+        resources.DISPLAY.draw(
+            Rectangle::new(Point::new(210, 210), Point::new(250, 250)).stroke(Some(BinaryColor::On)).stroke_width(3)
+        );
+    }
+*/
+
     #[exception (priority = 14)]
     fn SysTick() {
         unsafe {
@@ -128,36 +128,26 @@ const APP: () = {
         cortex_m::asm::wfi()
     }
 
-    #[interrupt (priority = 16, resources = [TIM3, VLINE, VDRAW, VFLAG, VGA_DRAW])]
+    #[interrupt (priority = 16, resources = [TIM3, VGA_DRAW])]
     fn TIM3() 
     {
         // Acknowledge IRQ
         resources.TIM3.sr.modify(|_, w| w.cc2if().clear_bit());
 
-        // Draw
-        if *resources.VFLAG {
-            resources.VGA_DRAW.draw(*resources.VLINE);
-
-            *resources.VDRAW += 1;
-            if *resources.VDRAW == 2 {
-                *resources.VDRAW = 0;
-                *resources.VLINE += 1;
-                if *resources.VLINE == vga::VSIZE_CHARS as u32 * 8 {
-                    *resources.VLINE = 0;
-                    *resources.VDRAW = 0;
-                    *resources.VFLAG = false;
-                }
-            }
-        }
+        resources.VGA_DRAW.on_hsync();
     }
 
-    #[interrupt (priority = 16, resources = [TIM4, VLINE, VFLAG])]
+    #[interrupt (priority = 16, resources = [TIM4, VGA_DRAW])]
     fn TIM4() 
     {
         // Acknowledge IRQ
         resources.TIM4.sr.modify(|_, w| w.cc4if().clear_bit());
 
-        *resources.VLINE = 0;
-        *resources.VFLAG = true;
+        resources.VGA_DRAW.on_vsync();
     }
+
+    // Interrupt handlers used to dispatch software tasks
+    extern "C" {
+        fn UART4();
+    }    
 };

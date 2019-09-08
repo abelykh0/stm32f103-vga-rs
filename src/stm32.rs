@@ -74,7 +74,7 @@ pub fn delay(milliseconds : u32) {
     }
 }
 
-fn get_count() -> u32 {
+pub fn get_count() -> u32 {
     unsafe {
         *SYSTICK_COUNT.get()
     }
