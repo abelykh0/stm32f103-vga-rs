@@ -1,11 +1,10 @@
 #![no_std]
 #![no_main]
 
-extern crate panic_halt;
-
 mod stm32;
 mod vga;
-mod vga_draw;
+use crate::vga::display::VgaDisplay;
+use crate::vga::draw::VgaDraw;
 
 use rtfm::app;
 use stm32f1::stm32f103 as device;
@@ -24,17 +23,24 @@ const APP: () = {
     static mut TIM4: device::TIM4 = ();
 
     // VGA
-    static mut DISPLAY : vga::VgaDisplay = vga::VgaDisplay {
+    static mut DISPLAY : VgaDisplay = VgaDisplay {
         pixels : [0; (vga::HSIZE_CHARS * 8 * vga::VSIZE_CHARS) as usize],
         attributes : [0; (vga::HSIZE_CHARS * vga::VSIZE_CHARS) as usize],
         default_attribute : [0; 64]
     };
-    static mut VLINE: i32 = 0; /* The current line being drawn */
-    static mut VDRAW: i32 = 0; /* Used to increment vline every 2 drawn lines */
+
+    static mut VGA_DRAW : VgaDraw = VgaDraw {
+        pixels_ptr : 0,
+        attributes_ptr : 0,
+        attribute_definitions_ptr : 0
+    };
+
+    static mut VLINE: u32 = 0; /* The current line being drawn */
+    static mut VDRAW: u32 = 0; /* Used to increment vline every 2 drawn lines */
     static mut VFLAG: bool = true; /* When true, can draw on the screen */
     //const GPIO_ODR: *device::gpioa::RegisterBlock = device::GPIOA::ptr();
 
-    #[init (resources = [DISPLAY])]
+    #[init (resources = [DISPLAY, VGA_DRAW])]
     fn init() -> init::LateResources {
         // Configure PLL and flash
         stm32::configure_clocks(&device.RCC, &device.FLASH);
@@ -51,7 +57,8 @@ const APP: () = {
 
         // Initialize VGA
         resources.DISPLAY.init_default_attribute(0x10, 0x3F);
-        vga::init_vga(&device);
+        resources.VGA_DRAW.init(&resources.DISPLAY);
+        vga::display::init_vga(&device);
 
         // Draw 
         resources.DISPLAY.draw(
@@ -121,7 +128,7 @@ const APP: () = {
         cortex_m::asm::wfi()
     }
 
-    #[interrupt (priority = 16, resources = [TIM3, VLINE, VDRAW, VFLAG, DISPLAY])]
+    #[interrupt (priority = 16, resources = [TIM3, VLINE, VDRAW, VFLAG, VGA_DRAW])]
     fn TIM3() 
     {
         // Acknowledge IRQ
@@ -129,16 +136,13 @@ const APP: () = {
 
         // Draw
         if *resources.VFLAG {
-            vga_draw::vga_draw(
-                &resources.DISPLAY.pixels[*resources.VLINE as usize * vga::HSIZE_CHARS as usize..],
-                &resources.DISPLAY.default_attribute[..],
-                &resources.DISPLAY.attributes[*resources.VLINE as usize / 8 * vga::HSIZE_CHARS as usize..]);
+            resources.VGA_DRAW.draw(*resources.VLINE);
 
             *resources.VDRAW += 1;
             if *resources.VDRAW == 2 {
                 *resources.VDRAW = 0;
                 *resources.VLINE += 1;
-                if *resources.VLINE == vga::VSIZE_CHARS as i32 * 8 {
+                if *resources.VLINE == vga::VSIZE_CHARS as u32 * 8 {
                     *resources.VLINE = 0;
                     *resources.VDRAW = 0;
                     *resources.VFLAG = false;

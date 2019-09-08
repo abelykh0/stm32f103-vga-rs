@@ -1,7 +1,5 @@
-pub const HSIZE_CHARS : u16 = 44;
-pub const VSIZE_CHARS : u16 = 37;
+use crate::vga::{HSIZE_CHARS, VSIZE_CHARS};
 
-extern crate panic_halt;
 use stm32f1::stm32f103 as device;
 use embedded_graphics::prelude::*;
 use embedded_graphics::Drawing;
