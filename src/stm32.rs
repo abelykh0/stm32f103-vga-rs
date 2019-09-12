@@ -1,4 +1,3 @@
-extern crate panic_halt;
 use stm32f1::stm32f103 as device;
 
 pub static mut SYSTICK_COUNT : core::cell::UnsafeCell<u32> = core::cell::UnsafeCell::new(0);

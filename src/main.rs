@@ -1,13 +1,16 @@
 #![no_std]
 #![no_main]
 
+//extern crate panic_semihosting;
+extern crate panic_halt;
+
 mod stm32;
 mod vga;
 use crate::vga::display::VgaDisplay;
 use crate::vga::draw::VgaDraw;
 
 use rtfm::app;
-use stm32f1::stm32f103 as device;
+use stm32f1::stm32f103 as blue_pill;
 use numtoa::NumToA;
 use embedded_graphics::prelude::*;
 use embedded_graphics::fonts::Font12x16;
@@ -17,11 +20,11 @@ use embedded_graphics::pixelcolor::BinaryColor;
 #[app(device = stm32f1::stm32f103)]
 const APP: () = {
     // Late resorce binding
-    static mut GPIOA: device::GPIOA = ();
-    static mut GPIOC: device::GPIOC = ();
-    static mut TIM2: device::TIM2 = ();
-    static mut TIM3: device::TIM3 = ();
-    static mut TIM4: device::TIM4 = ();
+    static mut GPIOA: blue_pill::GPIOA = ();
+    static mut GPIOC: blue_pill::GPIOC = ();
+    static mut TIM2: blue_pill::TIM2 = ();
+    static mut TIM3: blue_pill::TIM3 = ();
+    static mut TIM4: blue_pill::TIM4 = ();
 
     // VGA
     static mut DISPLAY : VgaDisplay = VgaDisplay {
@@ -37,7 +40,7 @@ const APP: () = {
         stm32::configure_clocks(&device.RCC, &device.FLASH);
 
         // Configures the system timer to trigger a SysTick exception every second
-        stm32::configure_systick(&mut core.SYST, 72_000); // period = 1ms
+        //stm32::configure_systick(&mut core.SYST, 72_000); // period = 1ms
 
         // Built-in LED is on GPIOC, pin 13
         device.RCC.apb2enr.modify(|_r, w| w.iopcen().set_bit());
@@ -49,16 +52,7 @@ const APP: () = {
         // Initialize VGA
         resources.DISPLAY.init_default_attribute(0x10, 0x3F);
         resources.VGA_DRAW.init(&resources.DISPLAY);
-        vga::display::init_vga(&device);
-
-        let mut buffer = [0u8; 20];
-        let count = stm32::get_count();
-        let s = count.numtoa_str(10, &mut buffer);
-        resources.DISPLAY.draw(
-            Font12x16::render_str(s)
-                .stroke(Some(BinaryColor::On))
-                .translate(Point::new(80, 5))
-        );
+        vga::draw::init_vga(&device);
 
         init::LateResources { 
             GPIOA: device.GPIOA,
@@ -69,16 +63,25 @@ const APP: () = {
         }
     }
 
-    #[idle (resources = [GPIOC])]
+    #[idle (resources = [TIM2, TIM4, DISPLAY, GPIOC])]
     fn idle() -> ! {
+        let mut buffer = [0u8; 20];
+        let count = stm32::get_count();
+        let s = count.numtoa_str(10, &mut buffer);
+        resources.DISPLAY.draw(
+            Font12x16::render_str(s)
+                .stroke(Some(BinaryColor::On))
+                .translate(Point::new(80, 5))
+        );
+
         loop {
             resources.GPIOC.brr.write(|w| w.br13().reset());
-            stm32::delay(1000);
-            //cortex_m::asm::delay(72_000_000);
+            //stm32::delay(1000);
+            cortex_m::asm::delay(72_000_000);
 
             resources.GPIOC.bsrr.write(|w| w.bs13().set());
-            stm32::delay(1000);
-            //cortex_m::asm::delay(72_000_000);
+            //stm32::delay(1000);
+            cortex_m::asm::delay(72_000_000);
         }
     }
 
@@ -118,14 +121,13 @@ const APP: () = {
     // fn PendSV() {
     // }
 
-    #[interrupt (priority = 15, resources = [TIM2])]
-    fn TIM2() 
+    #[interrupt (priority = 16, resources = [TIM4, VGA_DRAW])]
+    fn TIM4() 
     {
         // Acknowledge IRQ
-        resources.TIM2.sr.modify(|_, w| w.cc2if().clear_bit());
+        resources.TIM4.sr.modify(|_, w| w.cc4if().clear_bit());
 
-        // Idle the CPU until an interrupt arrives
-        cortex_m::asm::wfi()
+        resources.VGA_DRAW.on_vsync();
     }
 
     #[interrupt (priority = 16, resources = [TIM3, VGA_DRAW])]
@@ -137,17 +139,13 @@ const APP: () = {
         resources.VGA_DRAW.on_hsync();
     }
 
-    #[interrupt (priority = 16, resources = [TIM4, VGA_DRAW])]
-    fn TIM4() 
+    #[interrupt (priority = 15, resources = [TIM2])]
+    fn TIM2() 
     {
         // Acknowledge IRQ
-        resources.TIM4.sr.modify(|_, w| w.cc4if().clear_bit());
+        resources.TIM2.sr.modify(|_, w| w.cc2if().clear_bit());
 
-        resources.VGA_DRAW.on_vsync();
+        // Idle the CPU until an interrupt arrives
+        cortex_m::asm::wfi();
     }
-
-    // Interrupt handlers used to dispatch software tasks
-    extern "C" {
-        fn UART4();
-    }    
 };
