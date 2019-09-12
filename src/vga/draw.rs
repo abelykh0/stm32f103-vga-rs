@@ -1,3 +1,5 @@
+const SHOCK_ABSORBER_SHIFT_CYCLES : u16 = 60;
+
 use stm32f1::stm32f103 as blue_pill;
 use crate::vga::{HSIZE_CHARS, VSIZE_CHARS};
 use crate::vga::display::VgaDisplay;
@@ -195,7 +197,7 @@ fn init_h_sync(
     tim2.psc.write(|w| w.psc().bits(0));
 
     // TIM2CH2 triggers interrupt
-    tim2.ccr2.write(|w| w.ccr().bits(start_draw - 1 - 60));
+    tim2.ccr2.write(|w| w.ccr().bits(start_draw - 1 - SHOCK_ABSORBER_SHIFT_CYCLES));
     tim2.ccmr1_output().write(|w| w
         .cc2s().output()
         .oc2m().frozen()
