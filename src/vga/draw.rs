@@ -195,7 +195,7 @@ fn init_h_sync(
     tim2.psc.write(|w| w.psc().bits(0));
 
     // TIM2CH2 triggers interrupt
-    tim2.ccr2.write(|w| w.ccr().bits(start_draw - 12 - 1));
+    tim2.ccr2.write(|w| w.ccr().bits(start_draw - 1 - 50));
     tim2.ccmr1_output().write(|w| w
         .cc2s().output()
         .oc2m().frozen()

@@ -40,7 +40,7 @@ const APP: () = {
         stm32::configure_clocks(&device.RCC, &device.FLASH);
 
         // Configures the system timer to trigger a SysTick exception every second
-        //stm32::configure_systick(&mut core.SYST, 72_000); // period = 1ms
+        stm32::configure_systick(&mut core.SYST, 72_000); // period = 1ms
 
         // Built-in LED is on GPIOC, pin 13
         device.RCC.apb2enr.modify(|_r, w| w.iopcen().set_bit());
@@ -73,22 +73,6 @@ const APP: () = {
                 .stroke(Some(BinaryColor::On))
                 .translate(Point::new(80, 5))
         );
-
-        loop {
-            resources.GPIOC.brr.write(|w| w.br13().reset());
-            //stm32::delay(1000);
-            cortex_m::asm::delay(72_000_000);
-
-            resources.GPIOC.bsrr.write(|w| w.bs13().set());
-            //stm32::delay(1000);
-            cortex_m::asm::delay(72_000_000);
-        }
-    }
-
-/*
-    #[task (priority = 10, resources = [DISPLAY])]
-    fn draw() 
-    {
         resources.DISPLAY.draw(
             Font12x16::render_str("World!")
                 .stroke(Some(BinaryColor::On))
@@ -106,8 +90,15 @@ const APP: () = {
         resources.DISPLAY.draw(
             Rectangle::new(Point::new(210, 210), Point::new(250, 250)).stroke(Some(BinaryColor::On)).stroke_width(3)
         );
+
+        loop {
+            resources.GPIOC.brr.write(|w| w.br13().reset());
+            stm32::delay(1000);
+
+            resources.GPIOC.bsrr.write(|w| w.bs13().set());
+            stm32::delay(1000);
+        }
     }
-*/
 
     #[exception (priority = 14)]
     fn SysTick() {
