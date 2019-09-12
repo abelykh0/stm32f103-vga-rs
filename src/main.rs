@@ -92,11 +92,20 @@ const APP: () = {
         );
 
         loop {
-            resources.GPIOC.brr.write(|w| w.br13().reset());
-            stm32::delay(1000);
+            //resources.GPIOC.brr.write(|w| w.br13().reset());
+            //stm32::delay(1000);
 
-            resources.GPIOC.bsrr.write(|w| w.bs13().set());
-            stm32::delay(1000);
+            //resources.GPIOC.bsrr.write(|w| w.bs13().set());
+            //stm32::delay(1000);
+
+            for i in 80..100 {
+                resources.DISPLAY.draw(
+                    Circle::new(Point::new(i - 1, 80), 40).stroke(Some(BinaryColor::On)).fill(Some(BinaryColor::Off))
+                );
+                resources.DISPLAY.draw(
+                    Circle::new(Point::new(i, 80), 40).stroke(Some(BinaryColor::On)).fill(Some(BinaryColor::On))
+                );
+            }
         }
     }
 
