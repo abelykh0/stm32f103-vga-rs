@@ -77,7 +77,12 @@ const APP: () = {
             resources.DISPLAY.draw(
                 Font6x8::render_str(color)
                 .stroke(Some(BinaryColor::On))
-                .translate(Point::new(18 + (i % 6) * 56, 40 + (i / 6) * 16))
+                .translate(Point::new(16 + (i % 6) * 56, 41 + (i / 6) * 16))
+            );
+            resources.DISPLAY.draw(
+                Rectangle::new(Point::new(16 + (i % 6) * 56, 40 + (i / 6) * 16 + 8), 
+                    Point::new(16 + (i % 6) * 56 + 8 * 5, 40 + (i / 6) * 16 + 15))
+                    .stroke(Some(BinaryColor::On)).fill(Some(BinaryColor::On))
             );
         }
 
