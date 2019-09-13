@@ -10,9 +10,10 @@ use crate::vga::display::VgaDisplay;
 use crate::vga::render::VgaDraw;
 
 use rtfm::app;
+use numtoa::NumToA;
 use stm32f1::stm32f103 as blue_pill;
 use embedded_graphics::prelude::*;
-use embedded_graphics::fonts::Font12x16;
+use embedded_graphics::fonts::Font6x8;
 use embedded_graphics::primitives::Rectangle;
 use embedded_graphics::pixelcolor::BinaryColor;
 
@@ -70,6 +71,15 @@ const APP: () = {
         resources.DISPLAY.draw(
             Rectangle::new(Point::new(4, 4), Point::new(vga::HSIZE_CHARS as i32 * 8 - 5, vga::VSIZE_CHARS as i32 * 8 - 5)).stroke(Some(BinaryColor::On))
         );
+        for i in 0..64 {
+            let mut buffer = [0u8; 20];
+            let color = i.numtoa_str(2, &mut buffer);
+            resources.DISPLAY.draw(
+                Font6x8::render_str(color)
+                .stroke(Some(BinaryColor::On))
+                .translate(Point::new(18 + (i % 6) * 56, 40 + (i / 6) * 16))
+            );
+        }
 
         loop {
         }
