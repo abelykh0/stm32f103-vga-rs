@@ -1,7 +1,5 @@
 use stm32f1::stm32f103 as device;
 
-pub static mut SYSTICK_COUNT : core::cell::UnsafeCell<u32> = core::cell::UnsafeCell::new(0);
-
 macro_rules! block_while {
     ($condition:expr) => {
         while $condition {}
@@ -55,27 +53,3 @@ pub fn configure_clocks(rcc: &device::RCC, flash: &device::FLASH) {
     rcc.cfgr.modify(|_, w| w.sw().pll());
     block_until! { rcc.cfgr.read().sws() == device::rcc::cfgr::SWSR::PLL }
 }
-
-pub fn configure_systick(syst : &mut cortex_m::peripheral::SYST, period : u32) {
-    syst.set_clock_source(cortex_m::peripheral::syst::SystClkSource::Core);
-    syst.set_reload(period);
-    syst.enable_counter();
-    syst.enable_interrupt();
-}
-
-pub fn delay(milliseconds : u32) {
-    let start_count = get_count();
-    let end_count = start_count.wrapping_add(milliseconds);
-
-    let mut count = start_count;
-    while count < end_count || (end_count < start_count && count > start_count) {
-        count = get_count();
-    }
-}
-
-pub fn get_count() -> u32 {
-    unsafe {
-        *SYSTICK_COUNT.get()
-    }
-}
-

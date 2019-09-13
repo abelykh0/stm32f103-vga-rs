@@ -101,10 +101,16 @@ pub fn init_vga(
     let factor = 72 / 36;
     let whole_line = factor * 1024;
     let sync_pulse = factor * 72;
-    let start_draw = factor * (72 - 24) + 150;
+    let start_draw = factor * (72 - 24) + 160;
     init_h_sync(p, whole_line, sync_pulse, start_draw + horizontal_offset);
 
-    init_v_sync(p, 625, 2, 25);
+	let mut used_vertical_pixels = VSIZE_CHARS * 8 * 2;
+	if used_vertical_pixels > 600
+	{
+		used_vertical_pixels = 600;
+	}
+	let vertical_offset = ((600 - used_vertical_pixels) / 2) as u16;
+    init_v_sync(p, 625, 2, 25 + vertical_offset);
 }
 
 fn init_v_sync(

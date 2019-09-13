@@ -7,14 +7,13 @@ extern crate panic_halt;
 mod stm32;
 mod vga;
 use crate::vga::display::VgaDisplay;
-use crate::vga::draw::VgaDraw;
+use crate::vga::render::VgaDraw;
 
 use rtfm::app;
 use stm32f1::stm32f103 as blue_pill;
-use numtoa::NumToA;
 use embedded_graphics::prelude::*;
 use embedded_graphics::fonts::Font12x16;
-use embedded_graphics::primitives:: {Circle, Line, Rectangle, Triangle};
+use embedded_graphics::primitives::Rectangle;
 use embedded_graphics::pixelcolor::BinaryColor;
 
 #[app(device = stm32f1::stm32f103)]
@@ -40,7 +39,7 @@ const APP: () = {
         stm32::configure_clocks(&device.RCC, &device.FLASH);
 
         // Configures the system timer to trigger a SysTick exception every second
-        stm32::configure_systick(&mut core.SYST, 72_000); // period = 1ms
+        //stm32::configure_systick(&mut core.SYST, 72_000); // period = 1ms
 
         // Built-in LED is on GPIOC, pin 13
         device.RCC.apb2enr.modify(|_r, w| w.iopcen().set_bit());
@@ -52,7 +51,7 @@ const APP: () = {
         // Initialize VGA
         resources.DISPLAY.init_default_attribute(0x10, 0x3F);
         resources.VGA_DRAW.init(&resources.DISPLAY);
-        vga::draw::init_vga(&device);
+        vga::render::init_vga(&device);
 
         init::LateResources { 
             GPIOA: device.GPIOA,
@@ -65,61 +64,16 @@ const APP: () = {
 
     #[idle (resources = [TIM2, TIM4, DISPLAY, GPIOC])]
     fn idle() -> ! {
-        let mut buffer = [0u8; 20];
-        let count = stm32::get_count();
-        let s = count.numtoa_str(10, &mut buffer);
         resources.DISPLAY.draw(
-            Font12x16::render_str(s)
-                .stroke(Some(BinaryColor::On))
-                .translate(Point::new(80, 5))
+            Rectangle::new(Point::new(2, 2), Point::new(vga::HSIZE_CHARS as i32 * 8 - 3, vga::VSIZE_CHARS as i32 * 8 - 3)).stroke(Some(BinaryColor::On))
         );
         resources.DISPLAY.draw(
-            Font12x16::render_str("World!")
-                .stroke(Some(BinaryColor::On))
-                .translate(Point::new(80, 25))
-        );
-        resources.DISPLAY.draw(
-            Line::new(Point::new(80, 5), Point::new(200, 35)).stroke(Some(BinaryColor::On))
-        );
-        resources.DISPLAY.draw(
-            Circle::new(Point::new(80, 80), 40).stroke(Some(BinaryColor::On)).fill(Some(BinaryColor::On))
-        );
-        resources.DISPLAY.draw(
-            Triangle::new(Point::new(180, 180), Point::new(120, 180), Point::new(180, 120)).stroke(Some(BinaryColor::On))
-        );
-        resources.DISPLAY.draw(
-            Rectangle::new(Point::new(210, 210), Point::new(250, 250)).stroke(Some(BinaryColor::On)).stroke_width(3)
+            Rectangle::new(Point::new(4, 4), Point::new(vga::HSIZE_CHARS as i32 * 8 - 5, vga::VSIZE_CHARS as i32 * 8 - 5)).stroke(Some(BinaryColor::On))
         );
 
         loop {
-            //resources.GPIOC.brr.write(|w| w.br13().reset());
-            //stm32::delay(1000);
-
-            //resources.GPIOC.bsrr.write(|w| w.bs13().set());
-            //stm32::delay(1000);
-
-            for i in 80..100 {
-                resources.DISPLAY.draw(
-                    Circle::new(Point::new(i - 1, 80), 40).stroke(Some(BinaryColor::On)).fill(Some(BinaryColor::Off))
-                );
-                resources.DISPLAY.draw(
-                    Circle::new(Point::new(i, 80), 40).stroke(Some(BinaryColor::On)).fill(Some(BinaryColor::On))
-                );
-            }
         }
     }
-
-    #[exception (priority = 14)]
-    fn SysTick() {
-        unsafe {
-            let count = stm32::SYSTICK_COUNT.get();
-            *count = (core::num::Wrapping(*count) + core::num::Wrapping(1)).0;
-        }
-    }
-
-    // #[exception (priority = 1)]
-    // fn PendSV() {
-    // }
 
     #[interrupt (priority = 16, resources = [TIM4, VGA_DRAW])]
     fn TIM4() 
