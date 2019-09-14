@@ -22,8 +22,8 @@ This demo works around this to produce an acceptable quality 800x600 video with 
 
 ## How to build
 
-I recommend following the setup chapters from the [Rust Embedded][6] book. In
-particular, you need to have [Rust][2] and you need to make Rust aware of the
+I recommend following the setup chapters from the [Rust Embedded][2] book. In
+particular, you need to have [Rust][1] and you need to make Rust aware of the
 cross compilation target we're using here:
 
 ```shell
@@ -38,4 +38,6 @@ Now you should be able to compile everything by entering:
 ```shell
 $ cargo build --release
 ```
+[1]: https://rust-lang.org
+[2]: https://rust-embedded.github.io/book
 
