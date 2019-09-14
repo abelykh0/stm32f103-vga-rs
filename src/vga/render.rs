@@ -28,7 +28,7 @@ impl VgaDraw {
     pub fn init(&mut self, vga_display : &VgaDisplay) {
         self.pixels_ptr = vga_display.pixels.as_ptr() as u32;
         self.attributes_ptr = vga_display.attributes.as_ptr() as u32;
-        self.attribute_definitions_ptr = vga_display.default_attribute.as_ptr() as u32;
+        self.attribute_definitions_ptr = vga_display.attribute_definitions.as_ptr() as u32;
     }
 
     // Call this from TIM3 interrupt handler

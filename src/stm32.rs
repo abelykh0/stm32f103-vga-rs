@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use stm32f1::stm32f103 as device;
 
 macro_rules! block_while {

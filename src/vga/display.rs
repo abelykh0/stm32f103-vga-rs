@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use crate::vga::{HSIZE_CHARS, VSIZE_CHARS};
 
 use embedded_graphics::prelude::*;
@@ -8,7 +10,7 @@ use embedded_graphics::pixelcolor::BinaryColor;
 pub struct VgaDisplay {
     pub pixels: [u8; (HSIZE_CHARS * 8 * VSIZE_CHARS) as usize],
     pub attributes : [u8; (HSIZE_CHARS * VSIZE_CHARS) as usize],
-    pub default_attribute : [u8; 64]
+    pub attribute_definitions : [u8; 320]
 }
 
 impl VgaDisplay {
@@ -18,7 +20,7 @@ impl VgaDisplay {
             let mut value = i;
             let mut index = i << 2;
             for _bit in 0..4 {
-                self.default_attribute[index] = if value & 0x08 == 0 { back_color } else { fore_color };
+                self.attribute_definitions[index] = if value & 0x08 == 0 { back_color } else { fore_color };
                 value <<= 1;
                 index += 1;
             }

@@ -30,7 +30,7 @@ const APP: () = {
     static mut DISPLAY : VgaDisplay = VgaDisplay {
         pixels : [0; (vga::HSIZE_CHARS * 8 * vga::VSIZE_CHARS) as usize],
         attributes : [0; (vga::HSIZE_CHARS * vga::VSIZE_CHARS) as usize],
-        default_attribute : [0; 64]
+        attribute_definitions : [0; 320]
     };
     static mut VGA_DRAW : VgaDraw = VgaDraw::new();
 
@@ -48,6 +48,13 @@ const APP: () = {
             .mode13().output50()
             .cnf13().push_pull()
         });
+
+        // This is used to display 64 colors
+        for i in 0..64 {
+            for j in 0..4 {
+                resources.DISPLAY.attribute_definitions[i >> 2 + 64 + j] = i as u8;
+            }
+        }
 
         // Initialize VGA
         resources.DISPLAY.init_default_attribute(0x10, 0x3F);
@@ -79,11 +86,15 @@ const APP: () = {
                 .stroke(Some(BinaryColor::On))
                 .translate(Point::new(16 + (i % 6) * 56, 41 + (i / 6) * 16))
             );
-            resources.DISPLAY.draw(
-                Rectangle::new(Point::new(16 + (i % 6) * 56, 40 + (i / 6) * 16 + 8), 
-                    Point::new(16 + (i % 6) * 56 + 8 * 5, 40 + (i / 6) * 16 + 15))
-                    .stroke(Some(BinaryColor::On)).fill(Some(BinaryColor::On))
-            );
+            for j in 0..5 {
+                for y in 0..2 {
+                    resources.DISPLAY.pixels[((6 + (i / 6) * 2 + y * 8) * vga::HSIZE_CHARS as i32 + 1 + (i % 6) * 7 + j) as usize] = 0x10; // light blue
+                }
+                for y in 3..8 {
+                    resources.DISPLAY.pixels[((6 + (i / 6) * 2 + y * 8) * vga::HSIZE_CHARS as i32 + 1 + (i % 6) * 7 + j) as usize] = i as u8;
+                }
+                resources.DISPLAY.attributes[((6 + (i / 6) * 2) * vga::HSIZE_CHARS as i32 + 1 + (i % 6) * 7 + j) as usize] = 1;
+            }
         }
 
         loop {
