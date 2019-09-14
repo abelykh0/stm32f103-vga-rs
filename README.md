@@ -27,7 +27,7 @@ particular, you need to have [Rust][1] and you need to make Rust aware of the
 cross compilation target we're using here:
 
 ```shell
-$ rustup target add thumbv7em-none-eabihf
+$ rustup target add thumbv7em-none-eabi
 ```
 
 You will also need a GNU ARM toolchain to compile the assembly language
