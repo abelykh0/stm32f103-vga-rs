@@ -56,17 +56,18 @@ vga_draw_impl:
 		strb tmp2, [odr]                            @ 2
 
 		ror tmp2, #8                                @ 1
+		ldrb attr_offset, [attr], #1                @ 1*
+		strb tmp2, [odr]                            @ 2
+
+		ror tmp2, #8                                @ 1
 		add tmp1, tmp1, attr_offset, LSL #4         @ 1
 		strb tmp2, [odr]                            @ 2
 
 		ror tmp2, #8                                @ 1
 		ldr tmp1, [attr_base, tmp1, LSL #2]         @ 1*
 		strb tmp2, [odr]                            @ 2
-
-		ror tmp2, #8                                @ 1
-		ldrb attr_offset, [attr], #1                @ 1*
-		strb tmp2, [odr]                            @ 2
 	.endr
+
 
 	@ 0 at the end
 	mov r4, #0                     @ 1
