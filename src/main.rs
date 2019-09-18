@@ -93,7 +93,7 @@ const APP: () = {
                 for y in 3..8 {
                     resources.DISPLAY.pixels[((6 + (i / 6) * 2 + y * 8) * vga::HSIZE_CHARS as i32 + 1 + (i % 6) * 7 + j) as usize] = i as u8;
                 }
-                resources.DISPLAY.attributes[((6 + (i / 6) * 2) * vga::HSIZE_CHARS as i32 + 1 + (i % 6) * 7 + j) as usize] = 1;
+                resources.DISPLAY.attributes[((6 + (i / 6) * 2) * vga::HSIZE_CHARS as i32 + 2 + (i % 6) * 7 + j) as usize] = 1;
             }
         }
 
