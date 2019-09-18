@@ -31,7 +31,7 @@ $ rustup target add thumbv7em-none-eabi
 ```
 
 You will also need a [GNU ARM toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads/) to compile the assembly language
-routines. 
+routine. 
 
 Now you should be able to compile everything by entering:
 
