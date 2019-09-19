@@ -90,7 +90,7 @@ const APP: () = {
 
             let x_position = (2 + (i % 6) * 7) as usize;
             let y_position = (6 + (i / 6) * 2) as usize;
-            let offset1 = (1 + i >> 4) as u8;
+            let offset1 = (1 + (i >> 4)) as u8;
             let mut offset2 = (i & 0x0F) as u8;
             offset2 |= offset2 << 4;
             for j in 0..5 {
