@@ -9,13 +9,13 @@ mod vga;
 use crate::vga::display::VgaDisplay;
 use crate::vga::render::VgaDraw;
 
-use rtfm::app;
-use numtoa::NumToA;
-use stm32f1::stm32f103 as blue_pill;
+use core::str;
 use embedded_graphics::prelude::*;
 use embedded_graphics::fonts::Font6x8;
 use embedded_graphics::primitives::Rectangle;
 use embedded_graphics::pixelcolor::BinaryColor;
+use rtfm::app;
+use stm32f1::stm32f103 as blue_pill;
 
 #[app(device = stm32f1::stm32f103)]
 const APP: () = {
@@ -80,8 +80,8 @@ const APP: () = {
         );
 
         for i in 0..64 {
-            let mut buffer = [0u8; 20];
-            let color = i.numtoa_str(2, &mut buffer);
+            let mut buffer = [0u8; 6];
+            let color = format_color(i as u8, &mut buffer);
             resources.DISPLAY.draw(
                 Font6x8::render_str(color)
                 .stroke(Some(BinaryColor::On))
@@ -100,7 +100,6 @@ const APP: () = {
                 resources.DISPLAY.attributes[y_position * vga::HSIZE_CHARS as usize + x_position + j as usize] = offset1;
             }
         }
-
 
         loop {
         }
@@ -134,3 +133,20 @@ const APP: () = {
         cortex_m::asm::wfi();
     }
 };
+
+fn format_color(color : u8, buffer: &mut [u8]) -> &str {
+    let mut c = color;
+    for i in 0..6 {
+        if c & 0x20 == 0 {
+            buffer[i] = b'0';
+        }
+        else {
+            buffer[i] = b'1';
+        }
+        c <<= 1;
+    }
+
+    unsafe {
+        str::from_utf8_unchecked(buffer)
+    }
+}
