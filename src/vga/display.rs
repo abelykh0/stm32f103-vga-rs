@@ -6,7 +6,7 @@ use embedded_graphics::prelude::*;
 use embedded_graphics::Drawing;
 use embedded_graphics::pixelcolor::BinaryColor;
 
-/// VGA display
+// VGA display
 pub struct VgaDisplay {
     pub pixels: [u8; (HSIZE_CHARS * 8 * VSIZE_CHARS) as usize],
     pub attributes : [u8; (HSIZE_CHARS * VSIZE_CHARS) as usize],

@@ -18,8 +18,7 @@ use embedded_graphics::primitives::Rectangle;
 use embedded_graphics::pixelcolor::BinaryColor;
 use rtfm::app;
 use stm32f1::stm32f103 as blue_pill;
-use arraydeque::ArrayDeque;
-use pc_keyboard::{Keyboard, layouts, ScancodeSet2, HandleControl};
+use pc_keyboard::KeyEvent;
 
 #[app(device = stm32f1::stm32f103)]
 const APP: () = {
@@ -68,16 +67,16 @@ const APP: () = {
         resources.VGA_DRAW.init(&resources.DISPLAY);
         vga::render::init_vga(&device);
 
+        // Initialize keyboard
+        Ps2Keyboard::init(&device);
+
         init::LateResources { 
             GPIOA: device.GPIOA,
             GPIOC: device.GPIOC,
             TIM2: device.TIM2,
             TIM3: device.TIM3,
             TIM4: device.TIM4,
-            KEYBOARD : Ps2Keyboard {
-                queue : ArrayDeque::new(),
-                pc_keyboard : Keyboard::new(layouts::Us104Key, ScancodeSet2, HandleControl::MapLettersToUnicode)
-            }
+            KEYBOARD : Ps2Keyboard::new()
         }
     }
 
@@ -114,6 +113,11 @@ const APP: () = {
 
         loop {
         }
+    }
+
+    #[exception (resources = [GPIOA, KEYBOARD])]
+    fn PendSV() {
+        resources.KEYBOARD.update(resources.GPIOA.IDR);
     }
 
     #[interrupt (priority = 16, resources = [TIM4, VGA_DRAW])]
