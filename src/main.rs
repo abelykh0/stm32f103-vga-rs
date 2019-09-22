@@ -6,8 +6,10 @@ extern crate panic_halt;
 
 mod stm32;
 mod vga;
+mod keyboard;
 use crate::vga::display::VgaDisplay;
 use crate::vga::render::VgaDraw;
+use crate::keyboard::Ps2Keyboard;
 
 use core::str;
 use embedded_graphics::prelude::*;
@@ -16,6 +18,8 @@ use embedded_graphics::primitives::Rectangle;
 use embedded_graphics::pixelcolor::BinaryColor;
 use rtfm::app;
 use stm32f1::stm32f103 as blue_pill;
+use arraydeque::ArrayDeque;
+use pc_keyboard::{Keyboard, layouts, ScancodeSet2, HandleControl};
 
 #[app(device = stm32f1::stm32f103)]
 const APP: () = {
@@ -33,6 +37,9 @@ const APP: () = {
         attribute_definitions : [0; 320]
     };
     static mut VGA_DRAW : VgaDraw = VgaDraw::new();
+
+    // PS/2 Keyboard
+    static mut KEYBOARD : Ps2Keyboard = ();
 
     #[init (resources = [DISPLAY, VGA_DRAW])]
     fn init() -> init::LateResources {
@@ -52,12 +59,12 @@ const APP: () = {
         // This is used to display 64 colors
         for i in 0..64 {
             for j in 0..4 {
-                resources.DISPLAY.attribute_definitions[(i << 2) + 64 + j] = i as u8;
+                resources.DISPLAY.attribute_definitions[(i << 2) + 64 + j] = convert_color(i as u8);
             }
         }
 
         // Initialize VGA
-        resources.DISPLAY.init_default_attribute(0x10, 0x3F);
+        resources.DISPLAY.init_default_attribute(convert_color(0x10), convert_color(0x3F));
         resources.VGA_DRAW.init(&resources.DISPLAY);
         vga::render::init_vga(&device);
 
@@ -66,7 +73,11 @@ const APP: () = {
             GPIOC: device.GPIOC,
             TIM2: device.TIM2,
             TIM3: device.TIM3,
-            TIM4: device.TIM4
+            TIM4: device.TIM4,
+            KEYBOARD : Ps2Keyboard {
+                queue : ArrayDeque::new(),
+                pc_keyboard : Keyboard::new(layouts::Us104Key, ScancodeSet2, HandleControl::MapLettersToUnicode)
+            }
         }
     }
 
@@ -149,4 +160,13 @@ fn format_color(color : u8, buffer: &mut [u8]) -> &str {
     unsafe {
         str::from_utf8_unchecked(buffer)
     }
+}
+
+#[cfg(feature = "board2")]
+fn convert_color(color : u8) -> u8 {
+    (color & 0x03) | ((color << 2) & 0xF0)
+}
+#[cfg(not(feature = "board2"))]
+fn convert_color(color : u8) -> u8 {
+    color
 }

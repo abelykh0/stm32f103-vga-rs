@@ -40,7 +40,7 @@ impl VgaDraw {
                     self.pixels_ptr + self.vline * HSIZE_CHARS as u32,
                     self.attribute_definitions_ptr,
                     self.attributes_ptr + self.vline / 8 * HSIZE_CHARS as u32,
-                    0x4001080C as _)
+                    if cfg!(feature = "board2") { 0x40010C0D } else { 0x4001080C } as _)
             }
 
             self.vdraw += 1;
@@ -71,19 +71,33 @@ extern "C" {
 pub fn init_vga(
     p: &blue_pill::Peripherals) 
 {
-    // Set PA0..PA5 to OUTPUT with high speed
-    p.RCC.apb2enr.modify(|_r, w| w.iopaen().set_bit());
-    p.GPIOA.crl.modify(|_r, w| { w
-        .mode0().output50().cnf0().push_pull()
-        .mode1().output50().cnf1().push_pull()
-        .mode2().output50().cnf2().push_pull()
-        .mode3().output50().cnf3().push_pull()
-        .mode4().output50().cnf4().push_pull()
-        .mode5().output50().cnf5().push_pull()
-    });
+    p.RCC.apb2enr.modify(|_r, w| w.iopben().set_bit());
+
+    if cfg!(feature = "board2") {
+        // Set PB8..PB9, PB12..PB15 to OUTPUT with high speed
+        p.GPIOB.crh.modify(|_r, w| { w
+            .mode8().output50().cnf8().push_pull()
+            .mode9().output50().cnf9().push_pull()
+            .mode12().output50().cnf12().push_pull()
+            .mode13().output50().cnf13().push_pull()
+            .mode14().output50().cnf14().push_pull()
+            .mode15().output50().cnf15().push_pull()
+        });
+    }
+    else {
+        // Set PA0..PA5 to OUTPUT with high speed
+        p.RCC.apb2enr.modify(|_r, w| w.iopaen().set_bit());
+        p.GPIOA.crl.modify(|_r, w| { w
+            .mode0().output50().cnf0().push_pull()
+            .mode1().output50().cnf1().push_pull()
+            .mode2().output50().cnf2().push_pull()
+            .mode3().output50().cnf3().push_pull()
+            .mode4().output50().cnf4().push_pull()
+            .mode5().output50().cnf5().push_pull()
+        });
+    }
 
     // HSync on PB0 and VSync on PB6
-    p.RCC.apb2enr.modify(|_r, w| w.iopben().set_bit());
     p.GPIOB.crl.modify(|_r, w| { w
         .mode0().output50().cnf0().alt_push_pull()
         .mode6().output50().cnf6().alt_push_pull()
