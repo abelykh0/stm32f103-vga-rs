@@ -48,7 +48,10 @@ impl Ps2Keyboard {
             if self.last_clk == 0 {
                 match self.pc_keyboard.add_bit(self.last_bit) {
                     Ok(Some(event)) => {
-                        self.queue.push_back(event);
+                        match self.queue.push_back(event) {
+                            Ok(()) => {}
+                            Err(_e) => {}
+                        }
                     }
                     Ok(None) => {
                     }

@@ -117,7 +117,8 @@ const APP: () = {
 
     #[exception (resources = [GPIOA, KEYBOARD])]
     fn PendSV() {
-        resources.KEYBOARD.update(resources.GPIOA.IDR);
+        let gpio_bits = resources.GPIOA.idr.read().bits() as u16;
+        resources.KEYBOARD.update(gpio_bits);
     }
 
     #[interrupt (priority = 16, resources = [TIM4, VGA_DRAW])]
