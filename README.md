@@ -6,6 +6,8 @@ The STM32F103 is a Cortex-M3 microcontroller that has neither a video controller
 
 This demo works around this to produce an acceptable quality 800x600 video with 64 colors to display 364x296 pixels. It uses three timers and a GPIO port. 
 
+![Screenshot](https://raw.githubusercontent.com/abelykh0/stm32f103-vga-rs/master/doc/Screenshot.jpg)
+
 ## How to connect wires
 
 | PIN | Description | Connect To | Output |
