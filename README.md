@@ -12,12 +12,12 @@ This demo works around this to produce an acceptable quality 800x600 video with 
 
 | PIN | Description | Connect To | Output |
 | --- | ----------- | ---------- | ------ |
-| PA0 | Red 1 | Resistor 470 Ohm | VGA red (1)
-| PA1 | Red 2 | Resistor 680 Ohm | VGA red (1)
-| PA2 | Green 1 | Resistor 470 Ohm | VGA green (2)
-| PA3 | Green 2 | Resistor 680 Ohm | VGA green (2)
-| PA4 | Blue 1 | Resistor 470 Ohm | VGA blue (3)
-| PA5 | Blue 2 | Resistor 680 Ohm | VGA blue (3)
+| PB08 | Red 2 | Resistor 680 Ohm | VGA red (1)
+| PB09 | Red 1 | Resistor 470 Ohm | VGA red (1)
+| PB12 | Green 2 | Resistor 680 Ohm | VGA green (2)
+| PB13 | Green 1 | Resistor 470 Ohm | VGA green (2)
+| PB14 | Blue 2 | Resistor 680 Ohm | VGA blue (3)
+| PB15 | Blue 1 | Resistor 470 Ohm | VGA blue (3)
 | PB0 | HSync | | VGA HSync (13)
 | PB6 | VSync | | VGA VSync (14)
 | G | Ground | | VGA Ground (5,6,7,8,10)
