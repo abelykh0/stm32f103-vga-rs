@@ -20,6 +20,8 @@ This demo works around this to produce an acceptable quality 800x600 video with 
 | PB15 | Blue 2 | Resistor 470 Ohm | VGA blue (3)
 | PB0 | HSync | | VGA HSync (13)
 | PB6 | VSync | | VGA VSync (14)
+| PA0 | CLK | Resistor 2K2 to keyboard CLK and resistor 3K3 to GND
+| PA1 | DATA | Resistor 2K2 to keyboard DATA and resistor 3K3 to GND
 | G | Ground | | VGA Ground (5,6,7,8,10)
 
 ## How to build
