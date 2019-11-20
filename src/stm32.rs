@@ -53,5 +53,5 @@ pub fn configure_clocks(rcc: &device::RCC, flash: &device::FLASH) {
 
     // Select PLL as clock source.
     rcc.cfgr.modify(|_, w| w.sw().pll());
-    block_until! { rcc.cfgr.read().sws() == device::rcc::cfgr::SWSR::PLL }
+    block_until! { rcc.cfgr.read().sws().is_pll() }
 }
