@@ -82,7 +82,6 @@ const APP: () = {
 
     #[idle (resources = [tim2, tim4, display, gpioc])]
     fn idle(mut cx: idle::Context) -> ! {
-        /*
         cx.resources.display.draw(
             Rectangle::new(Point::new(2, 2), Point::new(vga::HSIZE_CHARS as i32 * 8 - 3, vga::VSIZE_CHARS as i32 * 8 - 3)).stroke(Some(BinaryColor::On))
         );
@@ -111,7 +110,6 @@ const APP: () = {
                 cx.resources.display.attributes[y_position * vga::HSIZE_CHARS as usize + x_position + j as usize] = offset1;
             }
         }
-        */
 
         loop {
         }

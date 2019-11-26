@@ -130,7 +130,14 @@ SECTIONS
 
     . = ALIGN(4); /* 4-byte align the end (VMA) of this section */
   } > RAM
-
+  
+  .uninit (NOLOAD) : ALIGN(4)
+  {
+    . = ALIGN(4);
+    *(.uninit .uninit.*);
+    . = ALIGN(4);
+  } > RAM
+  
   __sbss = ADDR(.bss);
   __ebss = ADDR(.bss) + SIZEOF(.bss);
 
