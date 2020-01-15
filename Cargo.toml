@@ -10,7 +10,7 @@ default = ["board2"]
 
 [dependencies]
 arraydeque = { version = "0.4.5", default-features = false }
-cortex-m = "0.6.1"
+cortex-m = "0.6.2"
 cortex-m-rt = "0.6.11"
 cortex-m-rtfm = "0.5.1"
 panic-halt = "0.2.0"
