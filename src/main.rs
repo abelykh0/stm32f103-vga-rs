@@ -104,6 +104,10 @@ const APP: () = {
         }
 
         loop {
+            cx.resources.gpioc.bsrr.write(|w| w.bs13().set_bit());
+            cortex_m::asm::delay(2000000);
+            cx.resources.gpioc.brr.write(|w| w.br13().set_bit());
+            cortex_m::asm::delay(2000000);
         }
     }
 
