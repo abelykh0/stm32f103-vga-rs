@@ -28,11 +28,13 @@ const APP: () = {
         tim3: blue_pill::TIM3,
         tim4: blue_pill::TIM4,
         keyboard : Ps2Keyboard,
+        #[init(VgaDraw::new())]
         vga_draw : VgaDraw,
+        #[init(VgaDisplay::new())]
         display : VgaDisplay
     }
 
-    #[init]
+    #[init(resources = [vga_draw, display])]
     fn init(cx: init::Context) -> init::LateResources {
         // Configure PLL and flash
         stm32::configure_clocks(&cx.device.RCC, &cx.device.FLASH);
@@ -47,22 +49,14 @@ const APP: () = {
             .cnf13().push_pull()
         });
 
-        // Initialize VGA
-        let mut display = VgaDisplay {
-            pixels : [0; (vga::HSIZE_CHARS * 8 * vga::VSIZE_CHARS) as usize],
-            attributes : [0; (vga::HSIZE_CHARS * vga::VSIZE_CHARS) as usize],
-            attribute_definitions : [0; 320]
-        };
-
         // This is used to display 64 colors
         for i in 0..64 {
             for j in 0..4 {
-                display.attribute_definitions[(i << 2) + 64 + j] = convert_color(i as u8);
+                cx.resources.display.attribute_definitions[(i << 2) + 64 + j] = convert_color(i as u8);
             }
         }
-        display.init_default_attribute(convert_color(0x10), convert_color(0x3F));
-        let mut vga_draw = VgaDraw::new();
-        vga_draw.init(&display);
+        cx.resources.display.init_default_attribute(convert_color(0x10), convert_color(0x3F));
+        cx.resources.vga_draw.init(&cx.resources.display);
         vga::render::init_vga(&cx.device);
 
         // Initialize keyboard
@@ -75,8 +69,6 @@ const APP: () = {
             tim3: cx.device.TIM3,
             tim4: cx.device.TIM4,
             keyboard : Ps2Keyboard::new(),
-            vga_draw : vga_draw,
-            display : display
         }
     }
 

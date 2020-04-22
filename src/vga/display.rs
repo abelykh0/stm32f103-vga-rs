@@ -14,6 +14,16 @@ pub struct VgaDisplay {
 }
 
 impl VgaDisplay {
+
+    pub const fn new() -> VgaDisplay
+    {
+        VgaDisplay {
+            pixels : [0; (HSIZE_CHARS * 8 * VSIZE_CHARS) as usize],
+            attributes : [0; (HSIZE_CHARS * VSIZE_CHARS) as usize],
+            attribute_definitions : [0; 320]
+        }
+    }
+    
     pub fn init_default_attribute(&mut self, back_color : u8, fore_color : u8)
     {
         for i in 0..16 {
