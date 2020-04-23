@@ -13,9 +13,10 @@ use crate::keyboard::Ps2Keyboard;
 
 use core::str;
 use embedded_graphics::prelude::*;
-use embedded_graphics::fonts::Font6x8;
+use embedded_graphics::fonts::{Font6x8, Text};
 use embedded_graphics::primitives::Rectangle;
 use embedded_graphics::pixelcolor::BinaryColor;
+use embedded_graphics::style::{PrimitiveStyleBuilder, TextStyle};
 use stm32f1::stm32f103 as blue_pill;
 //use pc_keyboard::KeyEvent;
 
@@ -74,22 +75,23 @@ const APP: () = {
 
     #[idle (resources = [tim2, tim4, display, gpioc])]
     fn idle(mut cx: idle::Context) -> ! {
-        cx.resources.display.draw(
-            Rectangle::new(Point::new(2, 2), Point::new(vga::HSIZE_CHARS as i32 * 8 - 3, vga::VSIZE_CHARS as i32 * 8 - 3)).stroke(Some(BinaryColor::On))
-        );
-        cx.resources.display.draw(
-            Rectangle::new(Point::new(4, 4), Point::new(vga::HSIZE_CHARS as i32 * 8 - 5, vga::VSIZE_CHARS as i32 * 8 - 5)).stroke(Some(BinaryColor::On))
-        );
+        let style = PrimitiveStyleBuilder::new().stroke_color(BinaryColor::On).build();
 
+        Rectangle::new(Point::new(2, 2), Point::new(vga::HSIZE_CHARS as i32 * 8 - 3, vga::VSIZE_CHARS as i32 * 8 - 3))
+            .into_styled(style)
+            .draw(cx.resources.display).unwrap();
+
+        Rectangle::new(Point::new(4, 4), Point::new(vga::HSIZE_CHARS as i32 * 8 - 5, vga::VSIZE_CHARS as i32 * 8 - 5))
+            .into_styled(style)
+            .draw(cx.resources.display).unwrap();
+    
         for i in 0..64 {
             let mut buffer = [0u8; 6];
             let color = format_color(i as u8, &mut buffer);
-            cx.resources.display.draw(
-                Font6x8::render_str(color)
-                .stroke(Some(BinaryColor::On))
-                .translate(Point::new(16 + (i % 6) * 56, 41 + (i / 6) * 16))
-            );
-
+            Text::new(color, Point::new(16 + (i % 6) * 56, 41 + (i / 6) * 16))
+                        .into_styled(TextStyle::new(Font6x8, BinaryColor::On))
+                        .draw(cx.resources.display)
+                        .unwrap();
             let x_position = (2 + (i % 6) * 7) as usize;
             let y_position = (6 + (i / 6) * 2) as usize;
             let offset1 = (1 + (i >> 4)) as u8;

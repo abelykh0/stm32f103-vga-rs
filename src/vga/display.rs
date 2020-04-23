@@ -3,7 +3,7 @@
 use crate::vga::{HSIZE_CHARS, VSIZE_CHARS};
 
 use embedded_graphics::prelude::*;
-use embedded_graphics::Drawing;
+use embedded_graphics::DrawTarget;
 use embedded_graphics::pixelcolor::BinaryColor;
 
 // VGA display
@@ -53,13 +53,19 @@ impl VgaDisplay {
     }
 }
 
-impl Drawing<BinaryColor> for VgaDisplay {
-    fn draw<T>(&mut self, item_pixels: T)
-        where T: IntoIterator<Item = Pixel<BinaryColor>>,
+impl DrawTarget<BinaryColor> for VgaDisplay {
+    type Error = core::convert::Infallible;
+
+    fn draw_pixel(&mut self, pixel: Pixel<BinaryColor>) -> Result<(), Self::Error>
     {
-        for pixel in item_pixels {
-            let point = pixel.0;
-            self.write_pixel(point.x as u16, point.y as u16, pixel.1);
-        }
+        let Pixel(coord, color) = pixel;
+
+        self.write_pixel(coord.x as u16, coord.y as u16, color);
+        Ok(())
+    }
+
+    fn size(&self) -> Size
+    {
+        Size::new((HSIZE_CHARS * 8).into(),(VSIZE_CHARS * 8).into())
     }
 }
