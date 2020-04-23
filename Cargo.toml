@@ -15,7 +15,7 @@ cortex-m-rt = "0.6.12"
 cortex-m-rtfm = "0.5.1"
 panic-halt = "0.2.0"
 # panic-semihosting = "0.5.3"
-embedded-graphics = "0.6.0-alpha"
+embedded-graphics = "0.6.2"
 pc-keyboard = "0.5.0"
 stm32f1 = { version = "0.10.0", features = ["rt", "stm32f103"] }
 
