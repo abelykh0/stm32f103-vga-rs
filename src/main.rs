@@ -20,7 +20,7 @@ use embedded_graphics::style::{PrimitiveStyleBuilder, TextStyle};
 use stm32f1::stm32f103 as blue_pill;
 //use pc_keyboard::KeyEvent;
 
-#[rtfm::app(device = stm32f1::stm32f103, peripherals = true)]
+#[rtic::app(device = stm32f1::stm32f103, peripherals = true)]
 const APP: () = {
     struct Resources {
         gpioa: blue_pill::GPIOA,
