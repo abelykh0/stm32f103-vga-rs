@@ -10,13 +10,13 @@ default = ["board2"]
 
 [dependencies]
 arraydeque = { version = "0.4.5", default-features = false }
-cortex-m = "0.6.2"
+cortex-m = "0.6.3"
 cortex-m-rt = "0.6.12"
 cortex-m-rtic = "0.5.3"
 panic-halt = "0.2.0"
 # panic-semihosting = "0.5.3"
 embedded-graphics = "0.6.2"
-pc-keyboard = "0.5.0"
+pc-keyboard = "0.5.1"
 stm32f1 = { version = "0.11.0", features = ["rt", "stm32f103"] }
 
 [build-dependencies]
