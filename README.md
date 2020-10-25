@@ -1,6 +1,8 @@
 # stm32f103-vga-rs
 VGA demo on STM32F103 "bluepill"
 
+![Board](https://raw.githubusercontent.com/abelykh0/stm32f103-vga-rs/master/doc/Board.jpg)
+
 ## Overview
 The STM32F103 is a Cortex-M3 microcontroller that has neither a video controller, nor enough RAM for a framebuffer at any reasonable resolution.
 
