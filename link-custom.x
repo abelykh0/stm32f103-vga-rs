@@ -88,7 +88,7 @@ SECTIONS
     /* place these 2 close to each other or the `b` instruction will fail to link */
     *(.PreResetTrampoline);
     *(.Reset);
-        
+
     *(.text .text.*);
     *(.HardFaultTrampoline);
     *(.HardFault.*);
