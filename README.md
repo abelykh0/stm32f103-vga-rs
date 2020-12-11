@@ -50,3 +50,9 @@ Note: on Windows there's currently an issue https://github.com/rust-embedded/cor
 [1]: https://rust-lang.org
 [2]: https://rust-embedded.github.io/book
 
+## Implementation Details
+* Timer TIM4 is used to generate vertical sync signal
+* Timer TIM2 is used as a "shock absorber" to make the VGA stable
+* Timer TIM3 is used to generate horizontal sync signal
+* File settings.h contains definitions for default colors (background and font), timing for VGA mode (set to 800x600 @ 56 Hz), as well as number of character columns and rows
+
