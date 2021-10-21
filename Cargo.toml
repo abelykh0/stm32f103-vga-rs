@@ -11,7 +11,7 @@ board2 = []
 [dependencies]
 arraydeque = { version = "0.4.5", default-features = false }
 cortex-m = "0.7.1"
-cortex-m-rt = "0.6.13"
+cortex-m-rt = "0.7.0"
 cortex-m-rtic = "0.5.5"
 panic-halt = "0.2.0"
 # panic-semihosting = "0.5.3"
