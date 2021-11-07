@@ -9,7 +9,7 @@
             "label": "🔗 Connect To STM32 Blue Pill",
             "type": "shell",
             "windows": {
-                "command": "c:\\openocd\\bin\\openocd -f interface/stlink-v2.cfg -f target/stm32f1x.cfg",
+                "command": "c:\\openocd\\bin\\openocd -f openocd.cfg",
             },
             "linux": {
                 "command": "openocd -f interface/stlink-v2.cfg -f target/stm32f1x.cfg",
