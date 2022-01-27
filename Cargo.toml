@@ -2,7 +2,7 @@
 name = "stm32f103-vga-rs"
 version = "0.1.0"
 authors = ["Andrey Belykh"]
-edition = "2018"
+edition = "2021"
 
 [features]
 board2 = []
